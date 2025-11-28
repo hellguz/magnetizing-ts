@@ -40,3 +40,6 @@ storybook-static/
 .cache/
 tmp/
 temp/
+
+
+.gpt
