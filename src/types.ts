@@ -1,3 +1,13 @@
+/**
+ * Defines how a room projects circulation space (corridors).
+ */
+export enum CorridorRule {
+  NONE = 0,       // No auto-generated corridor
+  ONE_SIDE = 1,   // Strip on the "Bottom" (y + height)
+  TWO_SIDES = 2,  // L-Shape: "Bottom" + "Right" (x + width)
+  ALL_SIDES = 3,  // Halo: Top, Bottom, Left, Right
+}
+
 export interface DiscreteConfig {
   gridResolution: number;
   maxIterations: number;
@@ -27,6 +37,11 @@ export interface RoomRequest {
   minRatio: number;
   maxRatio: number;
   isHall?: boolean;
+  /**
+   * Defines automatic corridor generation rule.
+   * Defaults to CorridorRule.NONE if undefined.
+   */
+  corridorRule?: CorridorRule;
 }
 
 export interface Adjacency {

@@ -25,6 +25,7 @@
     "test:ui": "vitest --ui",
     "dev": "tsc --watch",
     "example": "yarn build && tsx examples/basic-usage.ts",
+    "example:corridors": "yarn build && tsx examples/corridors-example.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

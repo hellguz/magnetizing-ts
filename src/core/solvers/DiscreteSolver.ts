@@ -1,7 +1,7 @@
 import { GridBuffer, Point } from '../grid/GridBuffer.js';
 import { Random } from '../../utils/Random.js';
 import { DiscreteConfig, RoomRequest, Adjacency } from '../../types.js';
-import { CELL_EMPTY, CELL_OUT_OF_BOUNDS, DEFAULT_GRID_RESOLUTION, DEFAULT_MAX_ITERATIONS, DEFAULT_MUTATION_RATE } from '../../constants.js';
+import { CELL_EMPTY, CELL_CORRIDOR, CELL_OUT_OF_BOUNDS, DEFAULT_GRID_RESOLUTION, DEFAULT_MAX_ITERATIONS, DEFAULT_MUTATION_RATE } from '../../constants.js';
 
 interface PlacedRoom {
   id: string;
@@ -195,10 +195,16 @@ export class DiscreteSolver {
   private placeRoom(room: RoomRequest, x: number, y: number, width: number, height: number): void {
     const roomIndex = this.roomIndexMap.get(room.id) || 0;
 
+    // Place room core
     for (let dy = 0; dy < height; dy++) {
       for (let dx = 0; dx < width; dx++) {
         this.grid.set(x + dx, y + dy, roomIndex);
       }
+    }
+
+    // Paint corridors if rule is defined (NONE = 0 is falsy)
+    if (room.corridorRule) {
+      this.paintCorridors(x, y, width, height, room.corridorRule);
     }
 
     this.placedRooms.set(room.id, {
@@ -209,6 +215,61 @@ export class DiscreteSolver {
       height,
       roomIndex,
     });
+  }
+
+  /**
+   * Paint corridor cells around a room according to the corridor rule.
+   * Only overwrites CELL_EMPTY; never overwrites rooms.
+   */
+  private paintCorridors(x: number, y: number, w: number, h: number, rule: number): void {
+    const tryPaint = (px: number, py: number) => {
+      if (this.grid.get(px, py) === CELL_EMPTY) {
+        this.grid.set(px, py, CELL_CORRIDOR);
+      }
+    };
+
+    // CorridorRule.ONE_SIDE = 1: Bottom strip
+    if (rule >= 1) {
+      const bottomY = y + h;
+      for (let px = x; px < x + w; px++) {
+        tryPaint(px, bottomY);
+      }
+    }
+
+    // CorridorRule.TWO_SIDES = 2: Bottom + Right (L-Shape)
+    if (rule >= 2) {
+      const rightX = x + w;
+      for (let py = y; py <= y + h; py++) {
+        tryPaint(rightX, py);
+      }
+    }
+
+    // CorridorRule.ALL_SIDES = 3: Halo (all 4 sides)
+    if (rule >= 3) {
+      // Top strip
+      const topY = y - 1;
+      for (let px = x - 1; px <= x + w; px++) {
+        tryPaint(px, topY);
+      }
+
+      // Bottom strip (extended to include corners)
+      const bottomY = y + h;
+      for (let px = x - 1; px <= x + w; px++) {
+        tryPaint(px, bottomY);
+      }
+
+      // Left strip (without top/bottom corners already painted)
+      const leftX = x - 1;
+      for (let py = y; py < y + h; py++) {
+        tryPaint(leftX, py);
+      }
+
+      // Right strip (without top/bottom corners already painted)
+      const rightX = x + w;
+      for (let py = y; py < y + h; py++) {
+        tryPaint(rightX, py);
+      }
+    }
   }
 
   /**
@@ -294,6 +355,52 @@ export class DiscreteSolver {
   }
 
   /**
+   * Count non-empty neighbors (not CELL_EMPTY and not CELL_OUT_OF_BOUNDS)
+   */
+  private countNonEmptyNeighbors(x: number, y: number): number {
+    let count = 0;
+    const neighbors = [
+      { x: x + 1, y },
+      { x: x - 1, y },
+      { x, y: y + 1 },
+      { x, y: y - 1 },
+    ];
+
+    for (const neighbor of neighbors) {
+      const val = this.grid.get(neighbor.x, neighbor.y);
+      if (val !== CELL_EMPTY && val !== CELL_OUT_OF_BOUNDS) {
+        count++;
+      }
+    }
+
+    return count;
+  }
+
+  /**
+   * Iteratively remove dead-end corridor cells.
+   * A dead end is a corridor cell with <= 1 non-empty neighbor.
+   */
+  pruneDeadEnds(): void {
+    let changed = true;
+
+    while (changed) {
+      changed = false;
+
+      for (let y = 0; y < this.grid.height; y++) {
+        for (let x = 0; x < this.grid.width; x++) {
+          if (this.grid.get(x, y) === CELL_CORRIDOR) {
+            const neighbors = this.countNonEmptyNeighbors(x, y);
+            if (neighbors <= 1) {
+              this.grid.set(x, y, CELL_EMPTY);
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Run the evolutionary algorithm
    */
   solve(): GridBuffer {
@@ -345,6 +452,17 @@ export class DiscreteSolver {
         this.grid = snapshot;
         this.placedRooms = snapshotRooms;
       }
+    }
+
+    // Final cleanup: remove dead-end corridors
+    this.pruneDeadEnds();
+    if (this.bestGrid) {
+      // Also prune the best grid
+      const tempGrid = this.grid;
+      this.grid = this.bestGrid;
+      this.pruneDeadEnds();
+      this.bestGrid = this.grid;
+      this.grid = tempGrid;
     }
 
     return this.bestGrid || this.grid;
