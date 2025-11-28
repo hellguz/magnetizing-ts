@@ -13,12 +13,12 @@ High-performance headless TypeScript library for procedural floor plan generatio
 
 ## Project Status
 
-**Core Complete** ✓
+**Complete** ✓
 - [x] Discrete Solver (grid-based topological optimization)
 - [x] Spring Solver (physics-based geometric refinement)
-- [x] Comprehensive test suite (100+ tests)
-
-See [TODO.md](TODO.md) for visualization roadmap.
+- [x] Interactive Storybook visualizations
+- [x] Comprehensive test suite (110+ tests)
+- [x] Working examples
 
 ## Quick Start
 
@@ -37,6 +37,9 @@ yarn dev
 
 # Run example
 yarn example
+
+# Launch Storybook (interactive visualizations)
+yarn storybook
 ```
 
 ## Usage
@@ -79,8 +82,10 @@ See [examples/basic-usage.ts](examples/basic-usage.ts) for complete workflow.
 
 ## Documentation
 
-- [SPEC.md](SPEC.md) - Complete technical specification
+- [docs/SPEC.md](docs/SPEC.md) - Complete technical specification
 - [TODO.md](TODO.md) - Implementation roadmap
+- [STORYBOOK.md](STORYBOOK.md) - Interactive visualization guide
+- [examples/](examples/) - Usage examples
 
 ## Architecture
 

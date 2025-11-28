@@ -22,12 +22,12 @@
 - [x] Velocity clamping
 - [x] Unit tests
 
-## Phase 4: Visualization
-- [ ] Vite + Storybook setup
-- [ ] Discrete grid renderer (Canvas 2D)
-- [ ] Continuous polygon renderer
-- [ ] Leva controls
-- [ ] Interactive demos
+## Phase 4: Visualization ✓
+- [x] Vite + Storybook setup
+- [x] Discrete grid renderer (Canvas 2D)
+- [x] Continuous polygon renderer
+- [x] Storybook controls (argTypes)
+- [x] Interactive demos
 
 ## Phase 5: Polish
 - [ ] Public API export
