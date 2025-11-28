@@ -34,3 +34,15 @@ export interface Adjacency {
   b: string;
   weight?: number;
 }
+
+export interface RoomState {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  vx: number; // Velocity X
+  vy: number; // Velocity Y
+  minRatio: number;
+  maxRatio: number;
+}

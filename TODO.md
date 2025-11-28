@@ -15,12 +15,12 @@
 - [x] Evolutionary loop
 - [x] Unit tests
 
-## Phase 3: Spring Solver
-- [ ] Polygon utilities (Clipper adapter)
-- [ ] Force calculations (adjacency, repulsion, boundary, aspect)
-- [ ] Integration loop (Symplectic Euler)
-- [ ] Velocity clamping
-- [ ] Unit tests
+## Phase 3: Spring Solver ✓
+- [x] Polygon utilities (Clipper adapter)
+- [x] Force calculations (adjacency, repulsion, boundary, aspect)
+- [x] Integration loop (Symplectic Euler)
+- [x] Velocity clamping
+- [x] Unit tests
 
 ## Phase 4: Visualization
 - [ ] Vite + Storybook setup
