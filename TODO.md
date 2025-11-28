@@ -8,8 +8,8 @@
 - [x] Vector2 + tests
 - [x] GridBuffer + tests
 
-## Phase 2: Discrete Solver
-- [ ] Random utility (PCG/Mulberry32)
+## Phase 2: Discrete Solver ⏳
+- [x] Random utility (PCG/Mulberry32)
 - [ ] Room placement logic
 - [ ] Mutation & scoring
 - [ ] Evolutionary loop
