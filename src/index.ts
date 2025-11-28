@@ -4,3 +4,4 @@ export * from './constants.js';
 export * from './core/geometry/Vector2.js';
 export * from './core/grid/GridBuffer.js';
 export * from './utils/Random.js';
+export * from './core/solvers/DiscreteSolver.js';
