@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html';
 import { SpringSolver } from '../core/solvers/SpringSolver.js';
 import { RoomState, Adjacency } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
-import { Polygon } from '../core/geometry/Polygon.js';
+// Removed Polygon import to avoid temptation of using slow Clipper operations in render loop
 
 type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant';
 
@@ -19,6 +19,7 @@ interface SpringRendererArgs {
   boundaryForce: number;
   aspectRatioForce: number;
   friction: number;
+  boundaryScale: number; // New Slider
   autoPlay: boolean;
   showAdjacencies: boolean;
   showVelocity: boolean;
@@ -208,6 +209,26 @@ const roomColors: Record<string, string> = {
   'restrooms': '#fab1a0',
 };
 
+// Helper: fast AABB overlap check
+const checkAABBOverlap = (r1: RoomState, r2: RoomState) => {
+  const r1Right = r1.x + r1.width;
+  const r1Bottom = r1.y + r1.height;
+  const r2Right = r2.x + r2.width;
+  const r2Bottom = r2.y + r2.height;
+
+  return !(r1.x > r2Right || r1Right < r2.x || r1.y > r2Bottom || r1Bottom < r2.y);
+};
+
+// Helper: Calculate centroid of a polygon
+const calculateCentroid = (points: Vec2[]) => {
+  let x = 0, y = 0;
+  for (const p of points) {
+    x += p.x;
+    y += p.y;
+  }
+  return { x: x / points.length, y: y / points.length };
+};
+
 const createRenderer = (args: SpringRendererArgs) => {
   const container = document.createElement('div');
   container.style.width = '100%';
@@ -221,10 +242,16 @@ const createRenderer = (args: SpringRendererArgs) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return container;
 
+  // Optimizations for Retina displays
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx.scale(dpr, dpr);
+
   canvas.style.display = 'block';
   canvas.style.cursor = 'grab';
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
 
   // Pan and zoom state
   let panOffset = { x: 0, y: 0 };
@@ -234,7 +261,17 @@ const createRenderer = (args: SpringRendererArgs) => {
 
   // Get template
   const template = templates[args.template];
-  const { boundary, rooms, adjacencies } = template;
+  const { rooms, adjacencies } = template;
+
+  // --- Boundary Scaling Logic ---
+  const initialBoundary = template.boundary;
+  const centroid = calculateCentroid(initialBoundary);
+  
+  const boundary = initialBoundary.map(p => ({
+    x: centroid.x + (p.x - centroid.x) * args.boundaryScale,
+    y: centroid.y + (p.y - centroid.y) * args.boundaryScale
+  }));
+  // ------------------------------
 
   // Create solver
   const solver = new SpringSolver(rooms, boundary, adjacencies, {
@@ -276,21 +313,22 @@ const createRenderer = (args: SpringRendererArgs) => {
   };
 
   const render = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear main canvas (considering dpr)
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
     ctx.save();
     ctx.translate(panOffset.x, panOffset.y);
     ctx.scale(zoom, zoom);
 
     // Center the view
-    const centerX = (canvas.width / zoom - 800) / 2;
-    const centerY = (canvas.height / zoom - 650) / 2;
+    const centerX = (canvas.width / dpr / zoom - 800) / 2;
+    const centerY = (canvas.height / dpr / zoom - 650) / 2;
     ctx.translate(centerX, centerY);
 
     // Draw boundary
     if (args.showBoundary) {
       ctx.strokeStyle = '#ff0000';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3 / zoom;
       ctx.setLineDash([10, 5]);
       ctx.beginPath();
       ctx.moveTo(boundary[0].x, boundary[0].y);
@@ -318,7 +356,7 @@ const createRenderer = (args: SpringRendererArgs) => {
 
           const lineWidth = (adj.weight ?? 1.0) * 1.5;
           ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
-          ctx.lineWidth = lineWidth;
+          ctx.lineWidth = lineWidth / zoom;
 
           ctx.beginPath();
           ctx.moveTo(centerA.x, centerA.y);
@@ -330,24 +368,17 @@ const createRenderer = (args: SpringRendererArgs) => {
       ctx.setLineDash([]);
     }
 
-    // Check for overlaps and draw rooms
+    // PERFORMANCE FIX: Use simple AABB check for visual overlap (O(N^2) but trivial math)
+    // Removed ClipperLib polygon intersection from render loop
     for (let i = 0; i < state.length; i++) {
       const room = state[i];
-      const roomPoly = Polygon.createRectangle(room.x, room.y, room.width, room.height);
-
       let hasOverlap = false;
+
+      // Only check if we are actually simulating repulsion or need to warn user
+      // Simple AABB check
       for (let j = 0; j < state.length; j++) {
         if (i === j) continue;
-        const otherRoom = state[j];
-        const otherPoly = Polygon.createRectangle(
-          otherRoom.x,
-          otherRoom.y,
-          otherRoom.width,
-          otherRoom.height
-        );
-
-        const overlapArea = Polygon.intersectionArea(roomPoly, otherPoly);
-        if (overlapArea > 0.01) {
+        if (checkAABBOverlap(room, state[j])) {
           hasOverlap = true;
           break;
         }
@@ -357,21 +388,16 @@ const createRenderer = (args: SpringRendererArgs) => {
       ctx.globalAlpha = hasOverlap ? 0.6 : 0.8;
       ctx.fillRect(room.x, room.y, room.width, room.height);
 
-      if (hasOverlap) {
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(room.x, room.y, room.width, room.height);
-      } else {
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(room.x, room.y, room.width, room.height);
-      }
+      ctx.lineWidth = hasOverlap ? (3 / zoom) : (1 / zoom);
+      ctx.strokeStyle = hasOverlap ? '#ff0000' : '#000000';
+      ctx.strokeRect(room.x, room.y, room.width, room.height);
 
       ctx.globalAlpha = 1.0;
 
-      // Draw label
+      // Draw label (optimized)
       ctx.fillStyle = '#000000';
-      ctx.font = '10px monospace';
+      const fontSize = Math.max(10, 10 / zoom);
+      ctx.font = `${fontSize}px monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -380,9 +406,9 @@ const createRenderer = (args: SpringRendererArgs) => {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.fillRect(
         room.x + room.width / 2 - textMetrics.width / 2 - padding,
-        room.y + room.height / 2 - 6,
+        room.y + room.height / 2 - (fontSize * 0.6),
         textMetrics.width + padding * 2,
-        12
+        fontSize * 1.2
       );
 
       ctx.fillStyle = '#000000';
@@ -397,25 +423,10 @@ const createRenderer = (args: SpringRendererArgs) => {
           const scale = 2;
 
           ctx.strokeStyle = '#0000ff';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2 / zoom;
           ctx.beginPath();
           ctx.moveTo(centerX, centerY);
           ctx.lineTo(centerX + room.vx * scale, centerY + room.vy * scale);
-          ctx.stroke();
-
-          const angle = Math.atan2(room.vy, room.vx);
-          const headLength = 5;
-          ctx.beginPath();
-          ctx.moveTo(centerX + room.vx * scale, centerY + room.vy * scale);
-          ctx.lineTo(
-            centerX + room.vx * scale - headLength * Math.cos(angle - Math.PI / 6),
-            centerY + room.vy * scale - headLength * Math.sin(angle - Math.PI / 6)
-          );
-          ctx.moveTo(centerX + room.vx * scale, centerY + room.vy * scale);
-          ctx.lineTo(
-            centerX + room.vx * scale - headLength * Math.cos(angle + Math.PI / 6),
-            centerY + room.vy * scale - headLength * Math.sin(angle + Math.PI / 6)
-          );
           ctx.stroke();
         }
       }
@@ -430,6 +441,7 @@ const createRenderer = (args: SpringRendererArgs) => {
       <strong>Spring Solver</strong><br>
       Iteration: ${iteration}<br>
       Kinetic Energy: ${energy.toFixed(2)}<br>
+      Boundary Scale: ${args.boundaryScale.toFixed(2)}<br>
       Converged: ${converged ? 'Yes' : 'No'}<br>
       <br>
       <em>Drag to pan, scroll to zoom</em>
@@ -489,7 +501,14 @@ const createRenderer = (args: SpringRendererArgs) => {
       animationId = null;
     }
     iteration = 0;
-    const newSolver = new SpringSolver(rooms, boundary, adjacencies, {
+    
+    // Re-create solver with current args (including scale)
+    const newBoundary = initialBoundary.map(p => ({
+        x: centroid.x + (p.x - centroid.x) * args.boundaryScale,
+        y: centroid.y + (p.y - centroid.y) * args.boundaryScale
+    }));
+
+    const newSolver = new SpringSolver(rooms, newBoundary, adjacencies, {
       timestep: 0.016,
       friction: args.friction,
       maxVelocity: 50.0,
@@ -585,6 +604,10 @@ const meta: Meta<SpringRendererArgs> = {
       control: { type: 'range', min: 0.5, max: 0.99, step: 0.01 },
       description: 'Friction coefficient (higher = slower)',
     },
+    boundaryScale: {
+      control: { type: 'range', min: 0.1, max: 1.0, step: 0.05 },
+      description: 'Scale boundary towards centroid',
+    },
     autoPlay: {
       control: { type: 'boolean' },
       description: 'Auto-play simulation on load',
@@ -618,6 +641,7 @@ export const SpringSolverStory: Story = {
     boundaryForce: 50,
     aspectRatioForce: 20,
     friction: 0.9,
+    boundaryScale: 1.0,
     autoPlay: false,
     showAdjacencies: true,
     showVelocity: false,

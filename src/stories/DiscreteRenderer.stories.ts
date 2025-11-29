@@ -19,6 +19,7 @@ interface DiscreteRendererArgs {
   mutationRate: number;
   maxIterations: number;
   cellSize: number;
+  boundaryScale: number; // New Slider
   showGrid: boolean;
   showStartPoint: boolean;
   showAdjacencies: boolean;
@@ -192,10 +193,16 @@ const createRenderer = (args: DiscreteRendererArgs) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return container;
 
+  // Optimizations for Retina displays and sharpness
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx.scale(dpr, dpr);
+
   canvas.style.display = 'block';
   canvas.style.cursor = 'grab';
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
 
   // Pan and zoom state
   let panOffset = { x: 0, y: 0 };
@@ -205,9 +212,16 @@ const createRenderer = (args: DiscreteRendererArgs) => {
 
   // Get template
   const template = templates[args.template];
-  const { boundary, rooms, adjacencies, startPoint } = template;
+  const { rooms, adjacencies, startPoint } = template;
 
-  // Create solver with start point for corridor network
+  // --- Boundary Scaling Logic ---
+  const boundary = template.boundary.map(p => ({
+    x: startPoint.x + (p.x - startPoint.x) * args.boundaryScale,
+    y: startPoint.y + (p.y - startPoint.y) * args.boundaryScale
+  }));
+  // ------------------------------
+
+  // Create solver
   const solver = new DiscreteSolver(
     boundary,
     rooms,
@@ -231,17 +245,10 @@ const createRenderer = (args: DiscreteRendererArgs) => {
   const grid = solver.getGrid();
   const placedRooms = solver.getPlacedRooms();
 
-  let renderScheduled = false;
-
-  const scheduleRender = () => {
-    if (!renderScheduled) {
-      renderScheduled = true;
-      requestAnimationFrame(() => {
-        render();
-        renderScheduled = false;
-      });
-    }
-  };
+  // --- Offscreen Buffering Optimization ---
+  // We render the static grid ONCE to an offscreen canvas.
+  // During pan/zoom, we just draw this image.
+  let offscreenCanvas: HTMLCanvasElement | null = null;
 
   const roomColors = new Map<number, string>([
     [CELL_EMPTY, '#ffffff'],
@@ -257,26 +264,25 @@ const createRenderer = (args: DiscreteRendererArgs) => {
     [8, '#fdcb6e'],
   ]);
 
-  const render = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const updateOffscreenBuffer = () => {
+    if (!offscreenCanvas) {
+      offscreenCanvas = document.createElement('canvas');
+    }
+    // Set offscreen size to exact grid dimensions
+    offscreenCanvas.width = grid.width * args.cellSize;
+    offscreenCanvas.height = grid.height * args.cellSize;
+    const offCtx = offscreenCanvas.getContext('2d');
+    if (!offCtx) return;
 
-    ctx.save();
-    ctx.translate(panOffset.x, panOffset.y);
-    ctx.scale(zoom, zoom);
+    offCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-    // Center the view
-    const centerX = (canvas.width / zoom - grid.width * args.cellSize) / 2;
-    const centerY = (canvas.height / zoom - grid.height * args.cellSize) / 2;
-    ctx.translate(centerX, centerY);
-
-    // Draw grid
     for (let y = 0; y < grid.height; y++) {
       for (let x = 0; x < grid.width; x++) {
         const cellValue = grid.get(x, y);
         const color = roomColors.get(cellValue) || '#cccccc';
 
-        ctx.fillStyle = color;
-        ctx.fillRect(
+        offCtx.fillStyle = color;
+        offCtx.fillRect(
           x * args.cellSize,
           y * args.cellSize,
           args.cellSize,
@@ -284,9 +290,9 @@ const createRenderer = (args: DiscreteRendererArgs) => {
         );
 
         if (args.showGrid) {
-          ctx.strokeStyle = '#eeeeee';
-          ctx.lineWidth = 0.5;
-          ctx.strokeRect(
+          offCtx.strokeStyle = '#eeeeee';
+          offCtx.lineWidth = 0.5;
+          offCtx.strokeRect(
             x * args.cellSize,
             y * args.cellSize,
             args.cellSize,
@@ -295,11 +301,48 @@ const createRenderer = (args: DiscreteRendererArgs) => {
         }
       }
     }
+  };
+
+  // Build the buffer initially
+  updateOffscreenBuffer();
+  // ----------------------------------------
+
+  let renderScheduled = false;
+
+  const scheduleRender = () => {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        render();
+        renderScheduled = false;
+      });
+    }
+  };
+
+  const render = () => {
+    // Clear main canvas
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+    ctx.save();
+    ctx.translate(panOffset.x, panOffset.y);
+    ctx.scale(zoom, zoom);
+
+    // Center the view
+    const centerX = (canvas.width / dpr / zoom - grid.width * args.cellSize) / 2;
+    const centerY = (canvas.height / dpr / zoom - grid.height * args.cellSize) / 2;
+    ctx.translate(centerX, centerY);
+
+    // 1. Draw Cached Grid (FAST)
+    if (offscreenCanvas) {
+      ctx.drawImage(offscreenCanvas, 0, 0);
+    }
+
+    // 2. Draw Dynamic Overlay Elements (Boundary, Connections, Labels)
 
     // Draw boundary
     if (args.showBoundary) {
       ctx.strokeStyle = '#ff0000';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3 / zoom; // Keep line width consistent visually
       ctx.setLineDash([10, 5]);
       ctx.beginPath();
       boundary.forEach((point, i) => {
@@ -327,7 +370,7 @@ const createRenderer = (args: DiscreteRendererArgs) => {
 
           const lineWidth = (adj.weight ?? 1.0) * 1.5;
           ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
-          ctx.lineWidth = lineWidth;
+          ctx.lineWidth = lineWidth / zoom;
           ctx.setLineDash([5, 5]);
           ctx.beginPath();
           ctx.moveTo(centerAx, centerAy);
@@ -342,22 +385,24 @@ const createRenderer = (args: DiscreteRendererArgs) => {
     if (args.showStartPoint) {
       const markerX = (startPoint.x + 0.5) * args.cellSize;
       const markerY = (startPoint.y + 0.5) * args.cellSize;
+      const radius = (args.cellSize * 0.4);
 
       ctx.fillStyle = '#ff0000';
       ctx.beginPath();
-      ctx.arc(markerX, markerY, args.cellSize * 0.4, 0, 2 * Math.PI);
+      ctx.arc(markerX, markerY, radius, 0, 2 * Math.PI);
       ctx.fill();
 
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 / zoom;
       ctx.stroke();
     }
 
-    // Draw room labels
-    ctx.fillStyle = '#000000';
-    ctx.font = '10px monospace';
+    // Draw room labels (on top of everything)
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    // Scale font size inversely with zoom so it remains readable
+    const fontSize = Math.max(10, 10 / zoom); 
+    ctx.font = `${fontSize}px monospace`;
 
     placedRooms.forEach((room) => {
       const centerX = (room.x + room.width / 2) * args.cellSize;
@@ -368,9 +413,9 @@ const createRenderer = (args: DiscreteRendererArgs) => {
       const padding = 2;
       ctx.fillRect(
         centerX - textMetrics.width / 2 - padding,
-        centerY - 6,
+        centerY - (fontSize * 0.6),
         textMetrics.width + padding * 2,
-        12
+        fontSize * 1.2
       );
 
       ctx.fillStyle = '#000000';
@@ -429,6 +474,7 @@ const createRenderer = (args: DiscreteRendererArgs) => {
     Grid: ${grid.width} × ${grid.height}<br>
     Rooms: ${placedRooms.size}/${rooms.length}<br>
     Resolution: ${args.gridResolution}m/cell<br>
+    Boundary Scale: ${args.boundaryScale.toFixed(2)}<br>
     <br>
     <em>Drag to pan, scroll to zoom</em>
   `;
@@ -467,6 +513,10 @@ const meta: Meta<DiscreteRendererArgs> = {
       control: { type: 'range', min: 5, max: 20, step: 1 },
       description: 'Visual size of each grid cell in pixels',
     },
+    boundaryScale: {
+      control: { type: 'range', min: 0.1, max: 1.0, step: 0.05 },
+      description: 'Scale boundary towards entrance',
+    },
     showGrid: {
       control: { type: 'boolean' },
       description: 'Show grid lines',
@@ -499,6 +549,7 @@ export const DiscreteSolverStory: Story = {
     mutationRate: 0.3,
     maxIterations: 100,
     cellSize: 12,
+    boundaryScale: 1.0,
     showGrid: true,
     showStartPoint: true,
     showAdjacencies: true,
