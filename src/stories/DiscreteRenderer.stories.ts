@@ -22,6 +22,7 @@ interface DiscreteRendererArgs {
   showGrid: boolean;
   showStartPoint: boolean;
   showAdjacencies: boolean;
+  showBoundary: boolean;
 }
 
 // Room configuration templates
@@ -180,11 +181,27 @@ const templates: Record<TemplateType, RoomTemplate> = {
 
 const createRenderer = (args: DiscreteRendererArgs) => {
   const container = document.createElement('div');
-  container.style.padding = '20px';
+  container.style.width = '100%';
+  container.style.height = '100vh';
+  container.style.margin = '0';
+  container.style.padding = '0';
+  container.style.overflow = 'hidden';
+  container.style.position = 'relative';
 
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) return container;
+
+  canvas.style.display = 'block';
+  canvas.style.cursor = 'grab';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // Pan and zoom state
+  let panOffset = { x: 0, y: 0 };
+  let zoom = 1.0;
+  let isDragging = false;
+  let dragStart = { x: 0, y: 0 };
 
   // Get template
   const template = templates[args.template];
@@ -206,144 +223,220 @@ const createRenderer = (args: DiscreteRendererArgs) => {
         corridor: 0.5,
       },
     },
-    42 // Fixed seed for consistency
+    42
   );
 
-  // Solve
   solver.solve();
 
   const grid = solver.getGrid();
   const placedRooms = solver.getPlacedRooms();
 
-  // Set canvas size
-  canvas.width = grid.width * args.cellSize;
-  canvas.height = grid.height * args.cellSize;
-  canvas.style.border = '1px solid #ccc';
+  let renderScheduled = false;
 
-  // Color map for rooms and corridors
+  const scheduleRender = () => {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        render();
+        renderScheduled = false;
+      });
+    }
+  };
+
   const roomColors = new Map<number, string>([
     [CELL_EMPTY, '#ffffff'],
     [CELL_OUT_OF_BOUNDS, '#000000'],
-    [CELL_CORRIDOR, '#e8e8e8'], // Corridors in light gray
-    [1, '#ff6b6b'], // Room 1 - Living Room
-    [2, '#4ecdc4'], // Room 2 - Kitchen
-    [3, '#45b7d1'], // Room 3 - Bedroom
-    [4, '#f7b731'], // Room 4 - Bathroom
-    [5, '#5f27cd'], // Room 5
+    [CELL_CORRIDOR, '#e8e8e8'],
+    [1, '#ff6b6b'],
+    [2, '#4ecdc4'],
+    [3, '#45b7d1'],
+    [4, '#f7b731'],
+    [5, '#5f27cd'],
+    [6, '#a29bfe'],
+    [7, '#fd79a8'],
+    [8, '#fdcb6e'],
   ]);
 
-  // Draw grid
-  for (let y = 0; y < grid.height; y++) {
-    for (let x = 0; x < grid.width; x++) {
-      const cellValue = grid.get(x, y);
-      const color = roomColors.get(cellValue) || '#cccccc';
+  const render = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = color;
-      ctx.fillRect(
-        x * args.cellSize,
-        y * args.cellSize,
-        args.cellSize,
-        args.cellSize
-      );
+    ctx.save();
+    ctx.translate(panOffset.x, panOffset.y);
+    ctx.scale(zoom, zoom);
 
-      // Draw grid lines
-      if (args.showGrid) {
-        ctx.strokeStyle = '#eeeeee';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(
+    // Center the view
+    const centerX = (canvas.width / zoom - grid.width * args.cellSize) / 2;
+    const centerY = (canvas.height / zoom - grid.height * args.cellSize) / 2;
+    ctx.translate(centerX, centerY);
+
+    // Draw grid
+    for (let y = 0; y < grid.height; y++) {
+      for (let x = 0; x < grid.width; x++) {
+        const cellValue = grid.get(x, y);
+        const color = roomColors.get(cellValue) || '#cccccc';
+
+        ctx.fillStyle = color;
+        ctx.fillRect(
           x * args.cellSize,
           y * args.cellSize,
           args.cellSize,
           args.cellSize
         );
+
+        if (args.showGrid) {
+          ctx.strokeStyle = '#eeeeee';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(
+            x * args.cellSize,
+            y * args.cellSize,
+            args.cellSize,
+            args.cellSize
+          );
+        }
       }
     }
-  }
 
-  // Draw adjacencies (connections between rooms) if enabled
-  if (args.showAdjacencies) {
-    adjacencies.forEach((adj) => {
-      const roomA = placedRooms.get(adj.a);
-      const roomB = placedRooms.get(adj.b);
+    // Draw boundary
+    if (args.showBoundary) {
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath();
+      boundary.forEach((point, i) => {
+        const x = point.x * args.cellSize;
+        const y = point.y * args.cellSize;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
-      if (roomA && roomB) {
-        const centerAx = (roomA.x + roomA.width / 2) * args.cellSize;
-        const centerAy = (roomA.y + roomA.height / 2) * args.cellSize;
-        const centerBx = (roomB.x + roomB.width / 2) * args.cellSize;
-        const centerBy = (roomB.y + roomB.height / 2) * args.cellSize;
+    // Draw adjacencies
+    if (args.showAdjacencies) {
+      adjacencies.forEach((adj) => {
+        const roomA = placedRooms.get(adj.a);
+        const roomB = placedRooms.get(adj.b);
 
-        // Draw line with thickness based on weight
-        const lineWidth = (adj.weight ?? 1.0) * 1.5;
-        ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
-        ctx.lineWidth = lineWidth;
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.moveTo(centerAx, centerAy);
-        ctx.lineTo(centerBx, centerBy);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    });
-  }
+        if (roomA && roomB) {
+          const centerAx = (roomA.x + roomA.width / 2) * args.cellSize;
+          const centerAy = (roomA.y + roomA.height / 2) * args.cellSize;
+          const centerBx = (roomB.x + roomB.width / 2) * args.cellSize;
+          const centerBy = (roomB.y + roomB.height / 2) * args.cellSize;
 
-  // Draw start point marker if enabled
-  if (args.showStartPoint) {
-    const markerX = (startPoint.x + 0.5) * args.cellSize;
-    const markerY = (startPoint.y + 0.5) * args.cellSize;
+          const lineWidth = (adj.weight ?? 1.0) * 1.5;
+          ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
+          ctx.lineWidth = lineWidth;
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(centerAx, centerAy);
+          ctx.lineTo(centerBx, centerBy);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+    }
 
-    // Draw a star or circle to mark the entrance
-    ctx.fillStyle = '#ff0000';
-    ctx.beginPath();
-    ctx.arc(markerX, markerY, args.cellSize * 0.4, 0, 2 * Math.PI);
-    ctx.fill();
+    // Draw start point marker
+    if (args.showStartPoint) {
+      const markerX = (startPoint.x + 0.5) * args.cellSize;
+      const markerY = (startPoint.y + 0.5) * args.cellSize;
 
-    // Add a white border for visibility
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
+      ctx.fillStyle = '#ff0000';
+      ctx.beginPath();
+      ctx.arc(markerX, markerY, args.cellSize * 0.4, 0, 2 * Math.PI);
+      ctx.fill();
 
-  // Draw room labels
-  ctx.fillStyle = '#000000';
-  ctx.font = '10px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
-  placedRooms.forEach((room) => {
-    const centerX = (room.x + room.width / 2) * args.cellSize;
-    const centerY = (room.y + room.height / 2) * args.cellSize;
-
-    // Draw background for text
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    const textMetrics = ctx.measureText(room.id);
-    const padding = 2;
-    ctx.fillRect(
-      centerX - textMetrics.width / 2 - padding,
-      centerY - 6,
-      textMetrics.width + padding * 2,
-      12
-    );
-
-    // Draw text
+    // Draw room labels
     ctx.fillStyle = '#000000';
-    ctx.fillText(room.id, centerX, centerY);
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    placedRooms.forEach((room) => {
+      const centerX = (room.x + room.width / 2) * args.cellSize;
+      const centerY = (room.y + room.height / 2) * args.cellSize;
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      const textMetrics = ctx.measureText(room.id);
+      const padding = 2;
+      ctx.fillRect(
+        centerX - textMetrics.width / 2 - padding,
+        centerY - 6,
+        textMetrics.width + padding * 2,
+        12
+      );
+
+      ctx.fillStyle = '#000000';
+      ctx.fillText(room.id, centerX, centerY);
+    });
+
+    ctx.restore();
+  };
+
+  // Pan and zoom handlers
+  canvas.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    canvas.style.cursor = 'grabbing';
+    dragStart = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
   });
 
-  // Add info text
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    panOffset = {
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    };
+    scheduleRender();
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    zoom = Math.max(0.1, Math.min(5, zoom * delta));
+    scheduleRender();
+  });
+
+  // Info overlay
   const info = document.createElement('div');
-  info.style.marginTop = '10px';
+  info.style.position = 'absolute';
+  info.style.top = '10px';
+  info.style.left = '10px';
+  info.style.background = 'rgba(255, 255, 255, 0.9)';
+  info.style.padding = '10px';
+  info.style.borderRadius = '4px';
   info.style.fontFamily = 'monospace';
+  info.style.fontSize = '12px';
+  info.style.pointerEvents = 'none';
   info.innerHTML = `
-    <strong>Discrete Solver Result</strong><br>
+    <strong>Discrete Solver</strong><br>
     Grid: ${grid.width} × ${grid.height}<br>
-    Placed: ${placedRooms.size}/${rooms.length} rooms<br>
+    Rooms: ${placedRooms.size}/${rooms.length}<br>
     Resolution: ${args.gridResolution}m/cell<br>
-    Iterations: ${args.maxIterations}<br>
-    Mutation Rate: ${(args.mutationRate * 100).toFixed(0)}%
+    <br>
+    <em>Drag to pan, scroll to zoom</em>
   `;
 
   container.appendChild(canvas);
   container.appendChild(info);
+
+  render();
 
   return container;
 };
@@ -386,13 +479,20 @@ const meta: Meta<DiscreteRendererArgs> = {
       control: { type: 'boolean' },
       description: 'Show adjacency connections between rooms',
     },
+    showBoundary: {
+      control: { type: 'boolean' },
+      description: 'Show apartment boundary (red dashed line)',
+    },
+  },
+  parameters: {
+    layout: 'fullscreen',
   },
 };
 
 export default meta;
 type Story = StoryObj<DiscreteRendererArgs>;
 
-export const Interactive: Story = {
+export const DiscreteSolverStory: Story = {
   args: {
     template: 'small-apartment',
     gridResolution: 1.0,
@@ -402,5 +502,6 @@ export const Interactive: Story = {
     showGrid: true,
     showStartPoint: true,
     showAdjacencies: true,
+    showBoundary: true,
   },
 };

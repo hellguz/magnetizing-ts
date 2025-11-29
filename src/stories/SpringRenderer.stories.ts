@@ -22,6 +22,7 @@ interface SpringRendererArgs {
   autoPlay: boolean;
   showAdjacencies: boolean;
   showVelocity: boolean;
+  showBoundary: boolean;
 }
 
 // Spring configuration templates
@@ -172,17 +173,64 @@ const templates: Record<TemplateType, SpringTemplate> = {
   },
 };
 
+const roomColors: Record<string, string> = {
+  'living': '#ff6b6b',
+  'kitchen': '#4ecdc4',
+  'bedroom': '#45b7d1',
+  'bedroom-1': '#45b7d1',
+  'bedroom-2': '#5f8bc4',
+  'bathroom': '#f7b731',
+  'bath-1': '#f7b731',
+  'bath-2': '#f9ca24',
+  'reception': '#a29bfe',
+  'office-1': '#fd79a8',
+  'office-2': '#fdcb6e',
+  'office-3': '#6c5ce7',
+  'meeting': '#00b894',
+  'restroom': '#fab1a0',
+  'entry': '#e17055',
+  'dining': '#74b9ff',
+  'dining-main': '#74b9ff',
+  'dining-private': '#81ecec',
+  'lobby': '#ffeaa7',
+  'gallery-a': '#dfe6e9',
+  'gallery-b': '#b2bec3',
+  'gallery-c': '#636e72',
+  'storage': '#a29bfe',
+  'waiting': '#55efc4',
+  'exam-1': '#ff7675',
+  'exam-2': '#ff7675',
+  'exam-3': '#ff7675',
+  'lab': '#74b9ff',
+  'staff': '#fdcb6e',
+  'entrance': '#e17055',
+  'bar': '#6c5ce7',
+  'restrooms': '#fab1a0',
+};
+
 const createRenderer = (args: SpringRendererArgs) => {
   const container = document.createElement('div');
-  container.style.padding = '20px';
+  container.style.width = '100%';
+  container.style.height = '100vh';
+  container.style.margin = '0';
+  container.style.padding = '0';
+  container.style.overflow = 'hidden';
+  container.style.position = 'relative';
 
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) return container;
 
-  canvas.width = 800;
-  canvas.height = 650;
-  canvas.style.border = '1px solid #ccc';
+  canvas.style.display = 'block';
+  canvas.style.cursor = 'grab';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // Pan and zoom state
+  let panOffset = { x: 0, y: 0 };
+  let zoom = 1.0;
+  let isDragging = false;
+  let dragStart = { x: 0, y: 0 };
 
   // Get template
   const template = templates[args.template];
@@ -201,67 +249,68 @@ const createRenderer = (args: SpringRendererArgs) => {
     },
   });
 
-  const roomColors: Record<string, string> = {
-    'living': '#ff6b6b',
-    'kitchen': '#4ecdc4',
-    'bedroom': '#45b7d1',
-    'bedroom-1': '#45b7d1',
-    'bedroom-2': '#5f8bc4',
-    'bathroom': '#f7b731',
-    'bath-1': '#f7b731',
-    'bath-2': '#f9ca24',
-    'reception': '#a29bfe',
-    'office-1': '#fd79a8',
-    'office-2': '#fdcb6e',
-    'office-3': '#6c5ce7',
-    'meeting': '#00b894',
-    'restroom': '#fab1a0',
-    'entry': '#e17055',
-    'dining': '#74b9ff',
-    'dining-main': '#74b9ff',
-    'dining-private': '#81ecec',
-    'lobby': '#ffeaa7',
-    'gallery-a': '#dfe6e9',
-    'gallery-b': '#b2bec3',
-    'gallery-c': '#636e72',
-    'storage': '#a29bfe',
-    'waiting': '#55efc4',
-    'exam-1': '#ff7675',
-    'exam-2': '#ff7675',
-    'exam-3': '#ff7675',
-    'lab': '#74b9ff',
-    'staff': '#fdcb6e',
-    'entrance': '#e17055',
-    'bar': '#6c5ce7',
-    'restrooms': '#fab1a0',
-  };
-
   let animationId: number | null = null;
   let iteration = 0;
+  let renderScheduled = false;
+
+  // Info display
+  const info = document.createElement('div');
+  info.style.position = 'absolute';
+  info.style.top = '10px';
+  info.style.left = '10px';
+  info.style.background = 'rgba(255, 255, 255, 0.9)';
+  info.style.padding = '10px';
+  info.style.borderRadius = '4px';
+  info.style.fontFamily = 'monospace';
+  info.style.fontSize = '12px';
+  info.style.pointerEvents = 'none';
+
+  const scheduleRender = () => {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        render();
+        renderScheduled = false;
+      });
+    }
+  };
 
   const render = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    ctx.save();
+    ctx.translate(panOffset.x, panOffset.y);
+    ctx.scale(zoom, zoom);
+
+    // Center the view
+    const centerX = (canvas.width / zoom - 800) / 2;
+    const centerY = (canvas.height / zoom - 650) / 2;
+    ctx.translate(centerX, centerY);
+
     // Draw boundary
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(boundary[0].x, boundary[0].y);
-    for (let i = 1; i < boundary.length; i++) {
-      ctx.lineTo(boundary[i].x, boundary[i].y);
+    if (args.showBoundary) {
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath();
+      ctx.moveTo(boundary[0].x, boundary[0].y);
+      for (let i = 1; i < boundary.length; i++) {
+        ctx.lineTo(boundary[i].x, boundary[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
-    ctx.closePath();
-    ctx.stroke();
 
     const state = solver.getState();
 
-    // Draw adjacency connections if enabled
+    // Draw adjacency connections
     if (args.showAdjacencies) {
       ctx.setLineDash([5, 5]);
 
       for (const adj of adjacencies) {
-        const roomA = state.find(r => r.id === adj.a);
-        const roomB = state.find(r => r.id === adj.b);
+        const roomA = state.find((r) => r.id === adj.a);
+        const roomB = state.find((r) => r.id === adj.b);
 
         if (roomA && roomB) {
           const centerA = { x: roomA.x + roomA.width / 2, y: roomA.y + roomA.height / 2 };
@@ -286,7 +335,6 @@ const createRenderer = (args: SpringRendererArgs) => {
       const room = state[i];
       const roomPoly = Polygon.createRectangle(room.x, room.y, room.width, room.height);
 
-      // Check overlap with other rooms
       let hasOverlap = false;
       for (let j = 0; j < state.length; j++) {
         if (i === j) continue;
@@ -305,12 +353,10 @@ const createRenderer = (args: SpringRendererArgs) => {
         }
       }
 
-      // Draw room
       ctx.fillStyle = roomColors[room.id] || '#cccccc';
       ctx.globalAlpha = hasOverlap ? 0.6 : 0.8;
       ctx.fillRect(room.x, room.y, room.width, room.height);
 
-      // Draw overlap indicator
       if (hasOverlap) {
         ctx.strokeStyle = '#ff0000';
         ctx.lineWidth = 3;
@@ -329,7 +375,6 @@ const createRenderer = (args: SpringRendererArgs) => {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Draw background for text
       const textMetrics = ctx.measureText(room.id);
       const padding = 2;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
@@ -341,13 +386,9 @@ const createRenderer = (args: SpringRendererArgs) => {
       );
 
       ctx.fillStyle = '#000000';
-      ctx.fillText(
-        room.id,
-        room.x + room.width / 2,
-        room.y + room.height / 2
-      );
+      ctx.fillText(room.id, room.x + room.width / 2, room.y + room.height / 2);
 
-      // Draw velocity vector if enabled
+      // Draw velocity vector
       if (args.showVelocity) {
         const speed = Math.sqrt(room.vx * room.vx + room.vy * room.vy);
         if (speed > 0.1) {
@@ -362,7 +403,6 @@ const createRenderer = (args: SpringRendererArgs) => {
           ctx.lineTo(centerX + room.vx * scale, centerY + room.vy * scale);
           ctx.stroke();
 
-          // Arrow head
           const angle = Math.atan2(room.vy, room.vx);
           const headLength = 5;
           ctx.beginPath();
@@ -380,20 +420,26 @@ const createRenderer = (args: SpringRendererArgs) => {
         }
       }
     }
+
+    ctx.restore();
+
+    // Update info
+    const energy = solver.getKineticEnergy();
+    const converged = solver.hasConverged(0.1);
+    info.innerHTML = `
+      <strong>Spring Solver</strong><br>
+      Iteration: ${iteration}<br>
+      Kinetic Energy: ${energy.toFixed(2)}<br>
+      Converged: ${converged ? 'Yes' : 'No'}<br>
+      <br>
+      <em>Drag to pan, scroll to zoom</em>
+    `;
   };
 
   const step = () => {
     solver.step();
     iteration++;
     render();
-
-    const energy = solver.getKineticEnergy();
-    info.innerHTML = `
-      <strong>Spring Solver (Physics Simulation)</strong><br>
-      Iteration: ${iteration}<br>
-      Kinetic Energy: ${energy.toFixed(2)}<br>
-      Converged: ${solver.hasConverged(0.1) ? 'Yes' : 'No'}
-    `;
 
     if (args.autoPlay && !solver.hasConverged(0.1)) {
       animationId = requestAnimationFrame(step);
@@ -405,14 +451,23 @@ const createRenderer = (args: SpringRendererArgs) => {
 
   // Controls
   const controls = document.createElement('div');
-  controls.style.marginTop = '10px';
+  controls.style.position = 'absolute';
+  controls.style.top = '10px';
+  controls.style.right = '10px';
+  controls.style.display = 'flex';
+  controls.style.gap = '5px';
+  controls.style.zIndex = '1000';
 
   const stepButton = document.createElement('button');
   stepButton.textContent = 'Step';
+  stepButton.style.padding = '5px 10px';
+  stepButton.style.cursor = 'pointer';
   stepButton.onclick = () => step();
 
   const playButton = document.createElement('button');
   playButton.textContent = args.autoPlay ? 'Pause' : 'Play';
+  playButton.style.padding = '5px 10px';
+  playButton.style.cursor = 'pointer';
   playButton.onclick = () => {
     if (animationId) {
       cancelAnimationFrame(animationId);
@@ -426,6 +481,8 @@ const createRenderer = (args: SpringRendererArgs) => {
 
   const resetButton = document.createElement('button');
   resetButton.textContent = 'Reset';
+  resetButton.style.padding = '5px 10px';
+  resetButton.style.cursor = 'pointer';
   resetButton.onclick = () => {
     if (animationId) {
       cancelAnimationFrame(animationId);
@@ -452,10 +509,38 @@ const createRenderer = (args: SpringRendererArgs) => {
   controls.appendChild(playButton);
   controls.appendChild(resetButton);
 
-  // Info display
-  const info = document.createElement('div');
-  info.style.marginTop = '10px';
-  info.style.fontFamily = 'monospace';
+  // Pan and zoom handlers
+  canvas.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    canvas.style.cursor = 'grabbing';
+    dragStart = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    panOffset = {
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    };
+    scheduleRender();
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    zoom = Math.max(0.1, Math.min(5, zoom * delta));
+    scheduleRender();
+  });
 
   container.appendChild(canvas);
   container.appendChild(controls);
@@ -465,11 +550,6 @@ const createRenderer = (args: SpringRendererArgs) => {
   if (args.autoPlay) {
     playButton.textContent = 'Pause';
     animationId = requestAnimationFrame(step);
-  } else {
-    info.innerHTML = `
-      <strong>Spring Solver (Physics Simulation)</strong><br>
-      Click "Play" or "Step" to run simulation
-    `;
   }
 
   return container;
@@ -517,13 +597,20 @@ const meta: Meta<SpringRendererArgs> = {
       control: { type: 'boolean' },
       description: 'Show velocity vectors (debugging)',
     },
+    showBoundary: {
+      control: { type: 'boolean' },
+      description: 'Show apartment boundary (red dashed line)',
+    },
+  },
+  parameters: {
+    layout: 'fullscreen',
   },
 };
 
 export default meta;
 type Story = StoryObj<SpringRendererArgs>;
 
-export const Interactive: Story = {
+export const SpringSolverStory: Story = {
   args: {
     template: 'small-apartment',
     adjacencyForce: 10,
@@ -534,5 +621,6 @@ export const Interactive: Story = {
     autoPlay: false,
     showAdjacencies: true,
     showVelocity: false,
+    showBoundary: true,
   },
 };
