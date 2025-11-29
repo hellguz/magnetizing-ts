@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { SpringSolver } from '../core/solvers/SpringSolver.js';
+import { SpringSolverPhysics } from '../core/solvers/SpringSolverPhysics.js';
 import { RoomState, Adjacency } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
+// Removed Polygon import to avoid temptation of using slow Clipper operations in render loop
 
 type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant';
 
@@ -13,18 +14,16 @@ interface SpringTemplate {
 
 interface SpringRendererArgs {
   template: TemplateType;
-  populationSize: number;
-  mutationRate: number;
-  mutationStrength: number;
-  crossoverRate: number;
-  selectionPressure: number;
-  fitnessBalance: number;
-  aspectRatioMutationRate: number;
-  boundaryScale: number;
+  adjacencyForce: number;
+  repulsionForce: number;
+  boundaryForce: number;
+  aspectRatioForce: number;
+  friction: number;
+  boundaryScale: number; // New Slider
   autoPlay: boolean;
   showAdjacencies: boolean;
+  showVelocity: boolean;
   showBoundary: boolean;
-  showPopulation: boolean;
 }
 
 // Spring configuration templates
@@ -79,14 +78,14 @@ const templates: Record<TemplateType, SpringTemplate> = {
       { x: 30, y: 630 },
     ],
     rooms: [
-      { id: 'entry', x: 80, y: 80, width: 100, height: 90, vx: 0, vy: 0, minRatio: 0.4, maxRatio: 1.6 },
+      { id: 'entry', x: 80, y: 80, width: 100, height: 90, vx: 0, vy: 0, minRatio: 0.8, maxRatio: 1.2 },
       { id: 'living', x: 250, y: 100, width: 200, height: 150, vx: 0, vy: 0, minRatio: 1.2, maxRatio: 1.6 },
       { id: 'dining', x: 500, y: 100, width: 150, height: 120, vx: 0, vy: 0, minRatio: 1.0, maxRatio: 1.4 },
       { id: 'kitchen', x: 500, y: 300, width: 150, height: 130, vx: 0, vy: 0, minRatio: 0.9, maxRatio: 1.3 },
       { id: 'bedroom-1', x: 100, y: 350, width: 140, height: 120, vx: 0, vy: 0, minRatio: 1.0, maxRatio: 1.3 },
       { id: 'bedroom-2', x: 300, y: 350, width: 130, height: 110, vx: 0, vy: 0, minRatio: 1.0, maxRatio: 1.3 },
-      { id: 'bath-1', x: 150, y: 500, width: 90, height: 80, vx: 0, vy: 0, minRatio: 0.3, maxRatio:3 },
-      { id: 'bath-2', x: 350, y: 500, width: 80, height: 70, vx: 0, vy: 0, minRatio: 0.3, maxRatio: 3 },
+      { id: 'bath-1', x: 150, y: 500, width: 90, height: 80, vx: 0, vy: 0, minRatio: 0.7, maxRatio: 1.0 },
+      { id: 'bath-2', x: 350, y: 500, width: 80, height: 70, vx: 0, vy: 0, minRatio: 0.7, maxRatio: 1.0 },
     ],
     adjacencies: [
       { a: 'entry', b: 'living', weight: 2.5 },
@@ -210,16 +209,6 @@ const roomColors: Record<string, string> = {
   'restrooms': '#fab1a0',
 };
 
-// Helper: fast AABB overlap check
-const checkAABBOverlap = (r1: RoomState, r2: RoomState) => {
-  const r1Right = r1.x + r1.width;
-  const r1Bottom = r1.y + r1.height;
-  const r2Right = r2.x + r2.width;
-  const r2Bottom = r2.y + r2.height;
-
-  return !(r1.x > r2Right || r1Right < r2.x || r1.y > r2Bottom || r1Bottom < r2.y);
-};
-
 // Helper: Calculate centroid of a polygon
 const calculateCentroid = (points: Vec2[]) => {
   let x = 0, y = 0;
@@ -264,28 +253,31 @@ const createRenderer = (args: SpringRendererArgs) => {
   const template = templates[args.template];
   const { rooms, adjacencies } = template;
 
-  // Boundary Scaling Logic
+  // --- Boundary Scaling Logic ---
   const initialBoundary = template.boundary;
   const centroid = calculateCentroid(initialBoundary);
-
+  
   const boundary = initialBoundary.map(p => ({
     x: centroid.x + (p.x - centroid.x) * args.boundaryScale,
     y: centroid.y + (p.y - centroid.y) * args.boundaryScale
   }));
+  // ------------------------------
 
-  // Create solver with ES config
-  const solver = new SpringSolver(rooms, boundary, adjacencies, {
-    populationSize: args.populationSize,
-    maxGenerations: 1000,
-    mutationRate: args.mutationRate,
-    mutationStrength: args.mutationStrength,
-    crossoverRate: args.crossoverRate,
-    selectionPressure: args.selectionPressure,
-    fitnessBalance: args.fitnessBalance,
-    aspectRatioMutationRate: args.aspectRatioMutationRate,
+  // Create solver
+  const solver = new SpringSolverPhysics(rooms, boundary, adjacencies, {
+    timestep: 0.016,
+    friction: args.friction,
+    maxVelocity: 50.0,
+    forces: {
+      adjacency: args.adjacencyForce,
+      repulsion: args.repulsionForce,
+      boundary: args.boundaryForce,
+      aspectRatio: args.aspectRatioForce,
+    },
   });
 
   let animationId: number | null = null;
+  let iteration = 0;
   let renderScheduled = false;
 
   // Info display
@@ -311,7 +303,7 @@ const createRenderer = (args: SpringRendererArgs) => {
   };
 
   const render = () => {
-    // Clear main canvas
+    // Clear main canvas (considering dpr)
     ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
     ctx.save();
@@ -366,31 +358,23 @@ const createRenderer = (args: SpringRendererArgs) => {
       ctx.setLineDash([]);
     }
 
-    // Draw rooms
+    // PERFORMANCE FIX: Use simple AABB check for visual overlap (O(N^2) but trivial math)
+    // Removed ClipperLib polygon intersection from render loop
     for (let i = 0; i < state.length; i++) {
       const room = state[i];
-      let hasOverlap = false;
 
-      // AABB overlap check
-      for (let j = 0; j < state.length; j++) {
-        if (i === j) continue;
-        if (checkAABBOverlap(room, state[j])) {
-          hasOverlap = true;
-          break;
-        }
-      }
 
       ctx.fillStyle = roomColors[room.id] || '#cccccc';
-      ctx.globalAlpha = hasOverlap ? 0.6 : 0.8;
+      ctx.globalAlpha = 0.8;
       ctx.fillRect(room.x, room.y, room.width, room.height);
 
-      ctx.lineWidth = hasOverlap ? (3 / zoom) : (1 / zoom);
-      ctx.strokeStyle = hasOverlap ? '#ff0000' : '#000000';
+      ctx.lineWidth = 1 / zoom;
+      ctx.strokeStyle = '#000000';
       ctx.strokeRect(room.x, room.y, room.width, room.height);
 
       ctx.globalAlpha = 1.0;
 
-      // Draw label
+      // Draw label (optimized)
       ctx.fillStyle = '#000000';
       const fontSize = Math.max(10, 10 / zoom);
       ctx.font = `${fontSize}px monospace`;
@@ -409,21 +393,35 @@ const createRenderer = (args: SpringRendererArgs) => {
 
       ctx.fillStyle = '#000000';
       ctx.fillText(room.id, room.x + room.width / 2, room.y + room.height / 2);
+
+      // Draw velocity vector
+      if (args.showVelocity) {
+        const speed = Math.sqrt(room.vx * room.vx + room.vy * room.vy);
+        if (speed > 0.1) {
+          const centerX = room.x + room.width / 2;
+          const centerY = room.y + room.height / 2;
+          const scale = 2;
+
+          ctx.strokeStyle = '#0000ff';
+          ctx.lineWidth = 2 / zoom;
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(centerX + room.vx * scale, centerY + room.vy * scale);
+          ctx.stroke();
+        }
+      }
     }
 
     ctx.restore();
 
     // Update info
-    const stats = solver.getStats();
-    const converged = solver.hasConverged(0.01);
+    const energy = solver.getKineticEnergy();
+    const converged = solver.hasConverged(0.1);
     info.innerHTML = `
-      <strong>Spring Solver (Evolutionary Strategy)</strong><br>
-      Generation: ${stats.generation}<br>
-      Best Fitness: ${stats.bestFitness.toFixed(4)}<br>
-      - FitnessG (Overlap): ${stats.bestFitnessG.toFixed(2)}<br>
-      - FitnessT (Distance): ${stats.bestFitnessT.toFixed(2)}<br>
-      Avg Fitness: ${stats.avgFitness.toFixed(4)}<br>
-      Population: ${args.populationSize}<br>
+      <strong>Spring Solver</strong><br>
+      Iteration: ${iteration}<br>
+      Kinetic Energy: ${energy.toFixed(2)}<br>
+      Boundary Scale: ${args.boundaryScale.toFixed(2)}<br>
       Converged: ${converged ? 'Yes' : 'No'}<br>
       <br>
       <em>Drag to pan, scroll to zoom</em>
@@ -432,9 +430,10 @@ const createRenderer = (args: SpringRendererArgs) => {
 
   const step = () => {
     solver.step();
+    iteration++;
     render();
 
-    if (args.autoPlay && !solver.hasConverged(0.01)) {
+    if (args.autoPlay && !solver.hasConverged(0.1)) {
       animationId = requestAnimationFrame(step);
     }
   };
@@ -481,22 +480,24 @@ const createRenderer = (args: SpringRendererArgs) => {
       cancelAnimationFrame(animationId);
       animationId = null;
     }
-
-    // Re-create solver
+    iteration = 0;
+    
+    // Re-create solver with current args (including scale)
     const newBoundary = initialBoundary.map(p => ({
         x: centroid.x + (p.x - centroid.x) * args.boundaryScale,
         y: centroid.y + (p.y - centroid.y) * args.boundaryScale
     }));
 
-    const newSolver = new SpringSolver(rooms, newBoundary, adjacencies, {
-      populationSize: args.populationSize,
-      maxGenerations: 1000,
-      mutationRate: args.mutationRate,
-      mutationStrength: args.mutationStrength,
-      crossoverRate: args.crossoverRate,
-      selectionPressure: args.selectionPressure,
-      fitnessBalance: args.fitnessBalance,
-      aspectRatioMutationRate: args.aspectRatioMutationRate,
+    const newSolver = new SpringSolverPhysics(rooms, newBoundary, adjacencies, {
+      timestep: 0.016,
+      friction: args.friction,
+      maxVelocity: 50.0,
+      forces: {
+        adjacency: args.adjacencyForce,
+        repulsion: args.repulsionForce,
+        boundary: args.boundaryForce,
+        aspectRatio: args.aspectRatioForce,
+      },
     });
     Object.assign(solver, newSolver);
     render();
@@ -554,7 +555,7 @@ const createRenderer = (args: SpringRendererArgs) => {
 };
 
 const meta: Meta<SpringRendererArgs> = {
-  title: 'Solvers/Spring Solver (Evolutionary)',
+  title: 'Solvers/Spring Solver (Physics)',
   tags: ['autodocs'],
   render: createRenderer,
   argTypes: {
@@ -563,33 +564,25 @@ const meta: Meta<SpringRendererArgs> = {
       options: ['small-apartment', 'office-suite', 'house', 'gallery', 'clinic', 'restaurant'],
       description: 'Room configuration template',
     },
-    populationSize: {
-      control: { type: 'range', min: 5, max: 50, step: 5 },
-      description: 'Number of candidate solutions (genes)',
+    adjacencyForce: {
+      control: { type: 'range', min: 0, max: 50, step: 1 },
+      description: 'Spring force between adjacent rooms',
     },
-    mutationRate: {
-      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
-      description: 'Probability of mutation per gene',
+    repulsionForce: {
+      control: { type: 'range', min: 0, max: 500, step: 10 },
+      description: 'Repulsion force for overlapping rooms',
     },
-    mutationStrength: {
-      control: { type: 'range', min: 1, max: 50, step: 1 },
-      description: 'Magnitude of position/dimension changes',
+    boundaryForce: {
+      control: { type: 'range', min: 0, max: 100, step: 5 },
+      description: 'Force pushing rooms inside boundary',
     },
-    crossoverRate: {
-      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
-      description: 'Rate of offspring generation',
+    aspectRatioForce: {
+      control: { type: 'range', min: 0, max: 50, step: 5 },
+      description: 'Force preserving room aspect ratios',
     },
-    selectionPressure: {
-      control: { type: 'range', min: 0.1, max: 0.5, step: 0.05 },
-      description: 'Percentage of population to cull',
-    },
-    fitnessBalance: {
-      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
-      description: 'Balance: 0=Geometric only, 1=Topological only',
-    },
-    aspectRatioMutationRate: {
-      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
-      description: 'Probability of aspect ratio mutation (room shape exploration)',
+    friction: {
+      control: { type: 'range', min: 0.5, max: 0.99, step: 0.01 },
+      description: 'Friction coefficient (higher = slower)',
     },
     boundaryScale: {
       control: { type: 'range', min: 0.1, max: 1.0, step: 0.05 },
@@ -603,13 +596,13 @@ const meta: Meta<SpringRendererArgs> = {
       control: { type: 'boolean' },
       description: 'Show adjacency connections between rooms',
     },
+    showVelocity: {
+      control: { type: 'boolean' },
+      description: 'Show velocity vectors (debugging)',
+    },
     showBoundary: {
       control: { type: 'boolean' },
       description: 'Show apartment boundary (red dashed line)',
-    },
-    showPopulation: {
-      control: { type: 'boolean' },
-      description: 'Show all genes in population (future feature)',
     },
   },
   parameters: {
@@ -620,56 +613,18 @@ const meta: Meta<SpringRendererArgs> = {
 export default meta;
 type Story = StoryObj<SpringRendererArgs>;
 
-export const EvolutionaryStrategy: Story = {
+export const SpringSolverStory: Story = {
   args: {
     template: 'small-apartment',
-    populationSize: 15,
-    mutationRate: 0.3,
-    mutationStrength: 10,
-    crossoverRate: 0.5,
-    selectionPressure: 0.3,
-    fitnessBalance: 0.5,
-    aspectRatioMutationRate: 0.3,
+    adjacencyForce: 10,
+    repulsionForce: 200,
+    boundaryForce: 50,
+    aspectRatioForce: 20,
+    friction: 0.9,
     boundaryScale: 1.0,
     autoPlay: false,
     showAdjacencies: true,
+    showVelocity: false,
     showBoundary: true,
-    showPopulation: false,
-  },
-};
-
-export const HighMutation: Story = {
-  args: {
-    template: 'office-suite',
-    populationSize: 20,
-    mutationRate: 0.7,
-    mutationStrength: 20,
-    crossoverRate: 0.4,
-    selectionPressure: 0.4,
-    fitnessBalance: 0.5,
-    aspectRatioMutationRate: 0.7,
-    boundaryScale: 0.8,
-    autoPlay: false,
-    showAdjacencies: true,
-    showBoundary: true,
-    showPopulation: false,
-  },
-};
-
-export const TopologyFocused: Story = {
-  args: {
-    template: 'house',
-    populationSize: 15,
-    mutationRate: 0.3,
-    mutationStrength: 10,
-    crossoverRate: 0.5,
-    selectionPressure: 0.3,
-    fitnessBalance: 0.8, // Higher = more focus on adjacency distances
-    aspectRatioMutationRate: 0.3,
-    boundaryScale: 1.0,
-    autoPlay: false,
-    showAdjacencies: true,
-    showBoundary: true,
-    showPopulation: false,
   },
 };

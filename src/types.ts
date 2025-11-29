@@ -21,6 +21,18 @@ export interface DiscreteConfig {
 }
 
 export interface SpringConfig {
+  populationSize: number;          // Number of genes (candidate solutions), e.g., 15
+  maxGenerations: number;          // Number of evolutionary iterations
+  mutationRate: number;            // Probability of mutation (0.0 to 1.0)
+  mutationStrength: number;        // Magnitude of position/dimension changes
+  crossoverRate: number;           // Probability of crossover (0.0 to 1.0)
+  selectionPressure: number;       // Percentage of population to cull each generation (0.0 to 1.0)
+  fitnessBalance: number;          // Weight between geometric (0.0) and topological (1.0) fitness
+  aspectRatioMutationRate: number; // Probability of aspect ratio mutation (0.0 to 1.0)
+}
+
+// Legacy physics-based config (preserved for SpringSolverPhysics)
+export interface SpringConfigPhysics {
   timestep: number;    // e.g., 0.016
   friction: number;    // e.g., 0.90
   maxVelocity: number; // e.g., 50.0
@@ -61,4 +73,16 @@ export interface RoomState {
   vy: number; // Velocity Y
   minRatio: number;
   maxRatio: number;
+}
+
+// Room state for Evolutionary Strategy (no velocity fields)
+export interface RoomStateES {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  minRatio: number;
+  maxRatio: number;
+  targetArea: number; // Store target area for mutations
 }
