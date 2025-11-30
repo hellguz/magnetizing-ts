@@ -254,14 +254,14 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { x: 30, y: 630 },
     ],
     rooms: [
-      { id: 'entry', x: 80, y: 80, width: 100, height: 90, vx: 0, vy: 0, minRatio: 0.4, maxRatio: 1.6 },
+      { id: 'entry', x: 80, y: 80, width: 100, height: 90, vx: 0, vy: 0, minRatio: 0.2, maxRatio: 5.0 },
       { id: 'living', x: 250, y: 100, width: 200, height: 150, vx: 0, vy: 0, minRatio: 1.2, maxRatio: 1.6 },
       { id: 'dining', x: 500, y: 100, width: 150, height: 120, vx: 0, vy: 0, minRatio: 1.0, maxRatio: 1.4 },
       { id: 'kitchen', x: 500, y: 300, width: 150, height: 130, vx: 0, vy: 0, minRatio: 0.9, maxRatio: 1.3 },
       { id: 'bedroom-1', x: 100, y: 350, width: 140, height: 120, vx: 0, vy: 0, minRatio: 1.0, maxRatio: 1.3 },
       { id: 'bedroom-2', x: 300, y: 350, width: 130, height: 110, vx: 0, vy: 0, minRatio: 1.0, maxRatio: 1.3 },
-      { id: 'bath-1', x: 150, y: 500, width: 90, height: 80, vx: 0, vy: 0, minRatio: 0.3, maxRatio: 3 },
-      { id: 'bath-2', x: 350, y: 500, width: 80, height: 70, vx: 0, vy: 0, minRatio: 0.3, maxRatio: 3 },
+      { id: 'bath-1', x: 150, y: 500, width: 90, height: 80, vx: 0, vy: 0, minRatio: 0.2, maxRatio: 5 },
+      { id: 'bath-2', x: 350, y: 500, width: 80, height: 70, vx: 0, vy: 0, minRatio: 0.2, maxRatio: 5 },
     ],
     adjacencies: [
       { a: 'entry', b: 'living', weight: 2.5 },
