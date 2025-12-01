@@ -423,7 +423,7 @@ type Story = StoryObj<DiscreteVisualizationArgs>;
 
 export const Default: Story = {
   args: {
-    template: 'small-apartment',
+    template: 'house',
     gridResolution: 1.0,
     mutationRate: 0.3,
     maxIterations: 100,

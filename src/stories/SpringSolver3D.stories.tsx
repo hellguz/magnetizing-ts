@@ -420,7 +420,7 @@ type Story = StoryObj<SpringVisualizationArgs>;
 
 export const Default: Story = {
   args: {
-    template: 'small-apartment',
+    template: 'house',
     populationSize: 15,
     mutationRate: 0.3,
     mutationStrength: 10,
