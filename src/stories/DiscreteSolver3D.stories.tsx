@@ -200,10 +200,12 @@ const DiscreteSolverVisualization: React.FC<DiscreteVisualizationArgs> = (args) 
     templateRef.current = template;
     const { rooms, adjacencies, startPoint, boundary: templateBoundary } = template;
 
-    // Apply boundary scaling
+    // Apply boundary scaling towards centroid for symmetric scaling
+    const centerX = templateBoundary.reduce((sum, p) => sum + p.x, 0) / templateBoundary.length;
+    const centerY = templateBoundary.reduce((sum, p) => sum + p.y, 0) / templateBoundary.length;
     const boundary = templateBoundary.map(p => ({
-      x: startPoint.x + (p.x - startPoint.x) * args.boundaryScale,
-      y: startPoint.y + (p.y - startPoint.y) * args.boundaryScale
+      x: centerX + (p.x - centerX) * args.boundaryScale,
+      y: centerY + (p.y - centerY) * args.boundaryScale
     }));
     scaledBoundaryRef.current = boundary;
     setEditableBoundary(boundary);

@@ -19,8 +19,8 @@ export const DiscreteGrid3D: React.FC<DiscreteGrid3DProps> = ({ grid, cellSize }
 
   // Color map matching the original canvas renderer
   const roomColors = new Map<number, string>([
-    [CELL_EMPTY, '#ffffff'],  // Medium gray for unoccupied cells
-    [CELL_OUT_OF_BOUNDS, '#000000'],
+    [CELL_EMPTY, '#ffffff'],  // White for unoccupied cells
+    [CELL_OUT_OF_BOUNDS, '#ffffff'],  // White to hide out-of-bounds cells (matches background)
     [CELL_CORRIDOR, '#e8e8e8'],
     [1, '#ff6b6b'],
     [2, '#4ecdc4'],
