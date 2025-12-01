@@ -332,7 +332,7 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
     ],
     rooms: [
       // Floor 1
-      { id: 'corridor-1', x: 150, y: 100, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'corridor-1', x: 150, y: 100, width: 30, height: 30, vx: 0, vy: 0, targetRatio: 100 },
       { id: 'apt-1-1', x: 100, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-1-2', x: 200, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-1-3', x: 300, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
@@ -345,7 +345,7 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { id: 'apt-1-10', x: 500, y: 130, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
 
       // Floor 2
-      { id: 'corridor-2', x: 150, y: 230, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'corridor-2', x: 150, y: 230, width: 30, height: 30, vx: 0, vy: 0, targetRatio: 100 },
       { id: 'apt-2-1', x: 100, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-2-2', x: 200, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-2-3', x: 300, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
@@ -358,7 +358,7 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { id: 'apt-2-10', x: 500, y: 260, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
 
       // Floor 3
-      { id: 'corridor-3', x: 150, y: 360, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'corridor-3', x: 150, y: 360, width: 30, height: 30, vx: 0, vy: 0, targetRatio: 100 },
       { id: 'apt-3-1', x: 100, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-3-2', x: 200, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-3-3', x: 300, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
@@ -371,7 +371,7 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { id: 'apt-3-10', x: 500, y: 390, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
 
       // Floor 4
-      { id: 'corridor-4', x: 150, y: 490, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'corridor-4', x: 150, y: 490, width: 30, height: 30, vx: 0, vy: 0, targetRatio: 100 },
       { id: 'apt-4-1', x: 100, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-4-2', x: 200, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-4-3', x: 300, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
@@ -384,7 +384,7 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { id: 'apt-4-10', x: 500, y: 520, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
 
       // Floor 5
-      { id: 'corridor-5', x: 150, y: 620, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100},
+      { id: 'corridor-5', x: 150, y: 620, width: 30, height: 30, vx: 0, vy: 0, targetRatio: 100 },
       { id: 'apt-5-1', x: 100, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-5-2', x: 200, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-5-3', x: 300, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
@@ -397,7 +397,7 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { id: 'apt-5-10', x: 500, y: 650, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
 
       // Floor 6
-      { id: 'corridor-6', x: 150, y: 750, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'corridor-6', x: 150, y: 750, width: 30, height: 30, vx: 0, vy: 0, targetRatio: 100 },
       { id: 'apt-6-1', x: 100, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-6-2', x: 200, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
       { id: 'apt-6-3', x: 300, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
@@ -581,6 +581,29 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     setVersion((v) => v + 1);
   }, [args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
 
+  // Handle reset generation
+  const handleReset = useCallback(() => {
+    const template = templateRef.current;
+    if (!template) return;
+
+    const { rooms, adjacencies } = template;
+    const currentBoundary = scaledBoundaryRef.current;
+
+    // Recreate solver with current parameters and boundary
+    solverRef.current = new SpringSolver(rooms, currentBoundary, adjacencies, {
+      populationSize: args.populationSize,
+      maxGenerations: 1000,
+      mutationRate: args.mutationRate,
+      mutationStrength: args.mutationStrength,
+      crossoverRate: args.crossoverRate,
+      selectionPressure: args.selectionPressure,
+      fitnessBalance: args.fitnessBalance,
+      aspectRatioMutationRate: args.aspectRatioMutationRate,
+    }, args.globalTargetRatio);
+
+    setVersion((v) => v + 1);
+  }, [args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
+
   // Animation loop controlled by autoPlay prop
   React.useEffect(() => {
     // Cancel any existing animation
@@ -662,6 +685,24 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
         Auto-Play: {args.autoPlay ? 'On' : 'Off'}
         <br />
         <br />
+        <button
+          onClick={handleReset}
+          style={{
+            padding: '8px 16px',
+            background: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            width: '100%',
+            marginBottom: '8px',
+          }}
+        >
+          Reset Generation
+        </button>
         <em>Right-drag to pan, scroll to zoom</em>
       </div>
     </div>
