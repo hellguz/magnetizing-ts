@@ -10,7 +10,7 @@ import { Point } from '../core/grid/GridBuffer.js';
 import { RoomRequest, Adjacency, CorridorRule } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
 
-type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant' | 'palace';
+type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant' | 'palace' | 'hotel';
 
 interface DiscreteTemplate {
   boundary: Point[];
@@ -330,6 +330,176 @@ const discreteTemplates: Record<TemplateType, DiscreteTemplate> = {
     ],
     startPoint: { x: 70, y: 5 },
   },
+  'hotel': {
+    boundary: [
+      { x: 0, y: 0 },
+      { x: 120, y: 0 },
+      { x: 120, y: 90 },
+      { x: 0, y: 90 },
+    ],
+    rooms: [
+      // Corridors
+      { id: 'corridor-1', targetArea: 150, targetRatio: 0.01, corridorRule: CorridorRule.ALL_SIDES },
+      { id: 'corridor-2', targetArea: 150, targetRatio: 0.01, corridorRule: CorridorRule.ALL_SIDES },
+      { id: 'corridor-3', targetArea: 150, targetRatio: 0.01, corridorRule: CorridorRule.ALL_SIDES },
+      { id: 'corridor-4', targetArea: 150, targetRatio: 0.01, corridorRule: CorridorRule.ALL_SIDES },
+      { id: 'corridor-5', targetArea: 150, targetRatio: 0.01, corridorRule: CorridorRule.ALL_SIDES },
+      { id: 'corridor-6', targetArea: 150, targetRatio: 0.01, corridorRule: CorridorRule.ALL_SIDES },
+
+      // Floor 1 apartments
+      { id: 'apt-1-1', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-2', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-3', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-4', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-5', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-6', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-7', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-8', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-9', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-1-10', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+
+      // Floor 2 apartments
+      { id: 'apt-2-1', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-2', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-3', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-4', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-5', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-6', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-7', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-8', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-9', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-2-10', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+
+      // Floor 3 apartments
+      { id: 'apt-3-1', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-2', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-3', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-4', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-5', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-6', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-7', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-8', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-9', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-3-10', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+
+      // Floor 4 apartments
+      { id: 'apt-4-1', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-2', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-3', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-4', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-5', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-6', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-7', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-8', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-9', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-4-10', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+
+      // Floor 5 apartments
+      { id: 'apt-5-1', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-2', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-3', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-4', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-5', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-6', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-7', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-8', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-9', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-5-10', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+
+      // Floor 6 apartments
+      { id: 'apt-6-1', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-2', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-3', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-4', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-5', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-6', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-7', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-8', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-9', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+      { id: 'apt-6-10', targetArea: 80, targetRatio: 1.3, corridorRule: CorridorRule.ONE_SIDE },
+    ],
+    adjacencies: [
+      // Floor 1 - corridor connections
+      { a: 'corridor-1', b: 'apt-1-1', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-2', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-3', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-4', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-5', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-6', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-7', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-8', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-9', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-10', weight: 2.0 },
+
+      // Floor 2 - corridor connections
+      { a: 'corridor-2', b: 'apt-2-1', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-2', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-3', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-4', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-5', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-6', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-7', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-8', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-9', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-10', weight: 2.0 },
+
+      // Floor 3 - corridor connections
+      { a: 'corridor-3', b: 'apt-3-1', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-2', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-3', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-4', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-5', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-6', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-7', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-8', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-9', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-10', weight: 2.0 },
+
+      // Floor 4 - corridor connections
+      { a: 'corridor-4', b: 'apt-4-1', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-2', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-3', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-4', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-5', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-6', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-7', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-8', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-9', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-10', weight: 2.0 },
+
+      // Floor 5 - corridor connections
+      { a: 'corridor-5', b: 'apt-5-1', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-2', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-3', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-4', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-5', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-6', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-7', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-8', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-9', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-10', weight: 2.0 },
+
+      // Floor 6 - corridor connections
+      { a: 'corridor-6', b: 'apt-6-1', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-2', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-3', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-4', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-5', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-6', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-7', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-8', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-9', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-10', weight: 2.0 },
+
+      // Vertical connections between floors (corridors to corridors)
+      { a: 'corridor-1', b: 'corridor-2', weight: 3.0 },
+      { a: 'corridor-2', b: 'corridor-3', weight: 3.0 },
+      { a: 'corridor-3', b: 'corridor-4', weight: 3.0 },
+      { a: 'corridor-4', b: 'corridor-5', weight: 3.0 },
+      { a: 'corridor-5', b: 'corridor-6', weight: 3.0 },
+    ],
+    startPoint: { x: 60, y: 5 },
+  },
 };
 
 // Discrete Solver Story Component
@@ -518,7 +688,7 @@ const meta: Meta<DiscreteVisualizationArgs> = {
   argTypes: {
     template: {
       control: { type: 'select' },
-      options: ['small-apartment', 'office-suite', 'house', 'gallery', 'clinic', 'restaurant', 'palace'],
+      options: ['small-apartment', 'office-suite', 'house', 'gallery', 'clinic', 'restaurant', 'palace', 'hotel'],
       description: 'Room configuration template',
     },
     gridResolution: {

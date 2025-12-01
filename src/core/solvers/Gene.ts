@@ -100,9 +100,11 @@ export class Gene {
     const ratioA = newWidthA / newHeightA;
     const ratioB = newWidthB / newHeightB;
 
-    // Use global target ratio if provided, otherwise use room-specific ratios
-    const targetRatioA = globalTargetRatio ?? roomA.targetRatio;
-    const targetRatioB = globalTargetRatio ?? roomB.targetRatio;
+    // Use global target ratio if provided (but not for corridors), otherwise use room-specific ratios
+    const isCorridorA = roomA.id.startsWith('corridor-');
+    const isCorridorB = roomB.id.startsWith('corridor-');
+    const targetRatioA = (globalTargetRatio && !isCorridorA) ? globalTargetRatio : roomA.targetRatio;
+    const targetRatioB = (globalTargetRatio && !isCorridorB) ? globalTargetRatio : roomB.targetRatio;
 
     // Compute valid range: [1/targetRatio, targetRatio]
     const minRatioA = 1.0 / targetRatioA;
@@ -149,9 +151,11 @@ export class Gene {
     const ratioA = newWidthA / newHeightA;
     const ratioB = newWidthB / newHeightB;
 
-    // Use global target ratio if provided, otherwise use room-specific ratios
-    const targetRatioA = globalTargetRatio ?? roomA.targetRatio;
-    const targetRatioB = globalTargetRatio ?? roomB.targetRatio;
+    // Use global target ratio if provided (but not for corridors), otherwise use room-specific ratios
+    const isCorridorA = roomA.id.startsWith('corridor-');
+    const isCorridorB = roomB.id.startsWith('corridor-');
+    const targetRatioA = (globalTargetRatio && !isCorridorA) ? globalTargetRatio : roomA.targetRatio;
+    const targetRatioB = (globalTargetRatio && !isCorridorB) ? globalTargetRatio : roomB.targetRatio;
 
     // Compute valid range: [1/targetRatio, targetRatio]
     const minRatioA = 1.0 / targetRatioA;
@@ -345,8 +349,9 @@ export class Gene {
 
       // Aspect ratio mutation (key innovation from original C#)
       if (Math.random() < aspectMutationRate) {
-        // Use global target ratio if provided, otherwise use room-specific ratio
-        const targetRatio = globalTargetRatio ?? room.targetRatio;
+        // Use global target ratio if provided (but not for corridors), otherwise use room-specific ratio
+        const isCorridor = room.id.startsWith('corridor-');
+        const targetRatio = (globalTargetRatio && !isCorridor) ? globalTargetRatio : room.targetRatio;
 
         // Compute min/max ratio from targetRatio
         // Valid range: [1/targetRatio, targetRatio]

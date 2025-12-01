@@ -105,6 +105,38 @@ const roomColors: Record<string, string> = {
   'garden-court': '#32cd32',
   'fountain-court': '#7fffd4',
   'grand-terrace': '#98fb98',
+
+  // Hotel - Corridors (gray tones)
+  'corridor-1': '#808080',
+  'corridor-2': '#808080',
+  'corridor-3': '#808080',
+  'corridor-4': '#808080',
+  'corridor-5': '#808080',
+  'corridor-6': '#808080',
+
+  // Hotel - Floor 1 apartments (light blue)
+  'apt-1-1': '#87ceeb', 'apt-1-2': '#87ceeb', 'apt-1-3': '#87ceeb', 'apt-1-4': '#87ceeb', 'apt-1-5': '#87ceeb',
+  'apt-1-6': '#87ceeb', 'apt-1-7': '#87ceeb', 'apt-1-8': '#87ceeb', 'apt-1-9': '#87ceeb', 'apt-1-10': '#87ceeb',
+
+  // Hotel - Floor 2 apartments (light coral)
+  'apt-2-1': '#f08080', 'apt-2-2': '#f08080', 'apt-2-3': '#f08080', 'apt-2-4': '#f08080', 'apt-2-5': '#f08080',
+  'apt-2-6': '#f08080', 'apt-2-7': '#f08080', 'apt-2-8': '#f08080', 'apt-2-9': '#f08080', 'apt-2-10': '#f08080',
+
+  // Hotel - Floor 3 apartments (light green)
+  'apt-3-1': '#90ee90', 'apt-3-2': '#90ee90', 'apt-3-3': '#90ee90', 'apt-3-4': '#90ee90', 'apt-3-5': '#90ee90',
+  'apt-3-6': '#90ee90', 'apt-3-7': '#90ee90', 'apt-3-8': '#90ee90', 'apt-3-9': '#90ee90', 'apt-3-10': '#90ee90',
+
+  // Hotel - Floor 4 apartments (light yellow)
+  'apt-4-1': '#ffffe0', 'apt-4-2': '#ffffe0', 'apt-4-3': '#ffffe0', 'apt-4-4': '#ffffe0', 'apt-4-5': '#ffffe0',
+  'apt-4-6': '#ffffe0', 'apt-4-7': '#ffffe0', 'apt-4-8': '#ffffe0', 'apt-4-9': '#ffffe0', 'apt-4-10': '#ffffe0',
+
+  // Hotel - Floor 5 apartments (light pink)
+  'apt-5-1': '#ffb6c1', 'apt-5-2': '#ffb6c1', 'apt-5-3': '#ffb6c1', 'apt-5-4': '#ffb6c1', 'apt-5-5': '#ffb6c1',
+  'apt-5-6': '#ffb6c1', 'apt-5-7': '#ffb6c1', 'apt-5-8': '#ffb6c1', 'apt-5-9': '#ffb6c1', 'apt-5-10': '#ffb6c1',
+
+  // Hotel - Floor 6 apartments (lavender)
+  'apt-6-1': '#e6e6fa', 'apt-6-2': '#e6e6fa', 'apt-6-3': '#e6e6fa', 'apt-6-4': '#e6e6fa', 'apt-6-5': '#e6e6fa',
+  'apt-6-6': '#e6e6fa', 'apt-6-7': '#e6e6fa', 'apt-6-8': '#e6e6fa', 'apt-6-9': '#e6e6fa', 'apt-6-10': '#e6e6fa',
 };
 
 /**

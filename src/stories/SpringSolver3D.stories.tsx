@@ -8,7 +8,7 @@ import { SpringSolver } from '../core/solvers/SpringSolver.js';
 import { RoomState, Adjacency } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
 
-type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant' | 'palace';
+type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant' | 'palace' | 'hotel';
 
 interface SpringTemplate {
   boundary: Vec2[];
@@ -323,6 +323,173 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { a: 'grand-terrace', b: 'lesser-throne', weight: 1.5 },
     ],
   },
+  'hotel': {
+    boundary: [
+      { x: 50, y: 50 },
+      { x: 1250, y: 50 },
+      { x: 1250, y: 950 },
+      { x: 50, y: 950 },
+    ],
+    rooms: [
+      // Floor 1
+      { id: 'corridor-1', x: 150, y: 100, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'apt-1-1', x: 100, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-2', x: 200, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-3', x: 300, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-4', x: 400, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-5', x: 500, y: 80, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-6', x: 100, y: 130, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-7', x: 200, y: 130, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-8', x: 300, y: 130, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-9', x: 400, y: 130, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-1-10', x: 500, y: 130, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+
+      // Floor 2
+      { id: 'corridor-2', x: 150, y: 230, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'apt-2-1', x: 100, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-2', x: 200, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-3', x: 300, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-4', x: 400, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-5', x: 500, y: 210, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-6', x: 100, y: 260, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-7', x: 200, y: 260, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-8', x: 300, y: 260, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-9', x: 400, y: 260, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-2-10', x: 500, y: 260, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+
+      // Floor 3
+      { id: 'corridor-3', x: 150, y: 360, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'apt-3-1', x: 100, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-2', x: 200, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-3', x: 300, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-4', x: 400, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-5', x: 500, y: 340, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-6', x: 100, y: 390, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-7', x: 200, y: 390, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-8', x: 300, y: 390, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-9', x: 400, y: 390, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-3-10', x: 500, y: 390, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+
+      // Floor 4
+      { id: 'corridor-4', x: 150, y: 490, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'apt-4-1', x: 100, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-2', x: 200, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-3', x: 300, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-4', x: 400, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-5', x: 500, y: 470, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-6', x: 100, y: 520, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-7', x: 200, y: 520, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-8', x: 300, y: 520, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-9', x: 400, y: 520, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-4-10', x: 500, y: 520, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+
+      // Floor 5
+      { id: 'corridor-5', x: 150, y: 620, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100},
+      { id: 'apt-5-1', x: 100, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-2', x: 200, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-3', x: 300, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-4', x: 400, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-5', x: 500, y: 600, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-6', x: 100, y: 650, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-7', x: 200, y: 650, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-8', x: 300, y: 650, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-9', x: 400, y: 650, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-5-10', x: 500, y: 650, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+
+      // Floor 6
+      { id: 'corridor-6', x: 150, y: 750, width: 900, height: 20, vx: 0, vy: 0, targetRatio: 100 },
+      { id: 'apt-6-1', x: 100, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-2', x: 200, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-3', x: 300, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-4', x: 400, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-5', x: 500, y: 730, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-6', x: 100, y: 780, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-7', x: 200, y: 780, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-8', x: 300, y: 780, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-9', x: 400, y: 780, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'apt-6-10', x: 500, y: 780, width: 80, height: 60, vx: 0, vy: 0, targetRatio: 1.3 },
+    ],
+    adjacencies: [
+      // Floor 1 - corridor connections
+      { a: 'corridor-1', b: 'apt-1-1', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-2', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-3', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-4', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-5', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-6', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-7', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-8', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-9', weight: 2.0 },
+      { a: 'corridor-1', b: 'apt-1-10', weight: 2.0 },
+
+      // Floor 2 - corridor connections
+      { a: 'corridor-2', b: 'apt-2-1', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-2', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-3', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-4', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-5', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-6', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-7', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-8', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-9', weight: 2.0 },
+      { a: 'corridor-2', b: 'apt-2-10', weight: 2.0 },
+
+      // Floor 3 - corridor connections
+      { a: 'corridor-3', b: 'apt-3-1', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-2', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-3', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-4', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-5', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-6', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-7', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-8', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-9', weight: 2.0 },
+      { a: 'corridor-3', b: 'apt-3-10', weight: 2.0 },
+
+      // Floor 4 - corridor connections
+      { a: 'corridor-4', b: 'apt-4-1', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-2', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-3', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-4', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-5', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-6', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-7', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-8', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-9', weight: 2.0 },
+      { a: 'corridor-4', b: 'apt-4-10', weight: 2.0 },
+
+      // Floor 5 - corridor connections
+      { a: 'corridor-5', b: 'apt-5-1', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-2', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-3', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-4', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-5', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-6', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-7', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-8', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-9', weight: 2.0 },
+      { a: 'corridor-5', b: 'apt-5-10', weight: 2.0 },
+
+      // Floor 6 - corridor connections
+      { a: 'corridor-6', b: 'apt-6-1', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-2', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-3', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-4', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-5', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-6', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-7', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-8', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-9', weight: 2.0 },
+      { a: 'corridor-6', b: 'apt-6-10', weight: 2.0 },
+
+      // Vertical connections between floors (corridors to corridors)
+      { a: 'corridor-1', b: 'corridor-2', weight: 3.0 },
+      { a: 'corridor-2', b: 'corridor-3', weight: 3.0 },
+      { a: 'corridor-3', b: 'corridor-4', weight: 3.0 },
+      { a: 'corridor-4', b: 'corridor-5', weight: 3.0 },
+      { a: 'corridor-5', b: 'corridor-6', weight: 3.0 },
+    ],
+  },
 };
 
 // Spring Solver Story Component
@@ -508,7 +675,7 @@ const meta: Meta<SpringVisualizationArgs> = {
   argTypes: {
     template: {
       control: { type: 'select' },
-      options: ['small-apartment', 'office-suite', 'house', 'gallery', 'clinic', 'restaurant', 'palace'],
+      options: ['small-apartment', 'office-suite', 'house', 'gallery', 'clinic', 'restaurant', 'palace', 'hotel'],
       description: 'Room configuration template',
     },
     populationSize: {
