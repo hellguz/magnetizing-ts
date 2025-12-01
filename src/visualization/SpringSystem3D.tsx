@@ -45,6 +45,66 @@ const roomColors: Record<string, string> = {
   'entrance': '#e17055',
   'bar': '#6c5ce7',
   'restrooms': '#fab1a0',
+
+  // Palace - Grand Public Spaces (gold/royal tones)
+  'grand-entrance': '#ffd700',
+  'main-throne': '#ff8c00',
+  'lesser-throne': '#ffb347',
+  'grand-ballroom': '#ffa07a',
+  'small-ballroom': '#ffcccb',
+
+  // Palace - Royal Private Quarters (purple/magenta tones)
+  'king-chamber': '#9370db',
+  'queen-chamber': '#da70d6',
+  'prince-chamber-1': '#ba55d3',
+  'prince-chamber-2': '#9932cc',
+  'princess-chamber': '#ee82ee',
+
+  // Palace - Royal Studies & Libraries (brown/tan tones)
+  'royal-study': '#d2691e',
+  'royal-library': '#cd853f',
+  'royal-archives': '#deb887',
+
+  // Palace - Dining & Kitchen Areas (warm red/orange tones)
+  'grand-dining': '#dc143c',
+  'formal-dining': '#ff6347',
+  'breakfast-room': '#ff7f50',
+  'main-kitchen': '#e9967a',
+  'secondary-kitchen': '#f08080',
+  'pantry': '#fa8072',
+  'wine-cellar': '#8b0000',
+
+  // Palace - Galleries & Art Spaces (light blue/gray tones)
+  'great-gallery': '#b0c4de',
+  'portrait-gallery': '#add8e6',
+
+  // Palace - Religious Spaces (white/cream tones)
+  'chapel': '#fffacd',
+  'prayer-room': '#fff8dc',
+
+  // Palace - Administrative & Strategic (dark blue tones)
+  'treasury': '#4682b4',
+  'war-room': '#191970',
+  'council-chamber': '#4169e1',
+
+  // Palace - Guard Rooms & Security (green/military tones)
+  'guard-north': '#556b2f',
+  'guard-south': '#6b8e23',
+  'guard-east': '#808000',
+  'guard-west': '#9acd32',
+  'armory': '#2f4f4f',
+
+  // Palace - Guest & Servant Areas (teal/cyan tones)
+  'guest-chamber-1': '#48d1cc',
+  'guest-chamber-2': '#40e0d0',
+  'guest-chamber-3': '#00ced1',
+  'servant-hall': '#5f9ea0',
+  'servant-quarters': '#20b2aa',
+
+  // Palace - Courtyards & Gardens (vibrant green tones)
+  'garden-court': '#32cd32',
+  'fountain-court': '#7fffd4',
+  'grand-terrace': '#98fb98',
 };
 
 /**

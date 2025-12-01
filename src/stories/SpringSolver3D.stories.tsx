@@ -8,7 +8,7 @@ import { SpringSolver } from '../core/solvers/SpringSolver.js';
 import { RoomState, Adjacency } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
 
-type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant';
+type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'gallery' | 'clinic' | 'restaurant' | 'palace';
 
 interface SpringTemplate {
   boundary: Vec2[];
@@ -176,6 +176,151 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       { a: 'bar', b: 'kitchen', weight: 2.0 },
       { a: 'kitchen', b: 'storage', weight: 2.0 },
       { a: 'entrance', b: 'restrooms', weight: 1.5 },
+    ],
+  },
+  'palace': {
+    boundary: [
+      { x: 50, y: 50 },
+      { x: 1450, y: 50 },
+      { x: 1450, y: 1050 },
+      { x: 50, y: 1050 },
+    ],
+    rooms: [
+      // Grand Public Spaces
+      { id: 'grand-entrance', x: 700, y: 100, width: 180, height: 150, vx: 0, vy: 0, targetRatio: 1.6 },
+      { id: 'main-throne', x: 700, y: 300, width: 220, height: 180, vx: 0, vy: 0, targetRatio: 1.8 },
+      { id: 'lesser-throne', x: 950, y: 320, width: 160, height: 130, vx: 0, vy: 0, targetRatio: 1.5 },
+      { id: 'grand-ballroom', x: 500, y: 550, width: 280, height: 200, vx: 0, vy: 0, targetRatio: 2.0 },
+      { id: 'small-ballroom', x: 850, y: 600, width: 180, height: 130, vx: 0, vy: 0, targetRatio: 1.6 },
+
+      // Royal Private Quarters
+      { id: 'king-chamber', x: 200, y: 150, width: 160, height: 140, vx: 0, vy: 0, targetRatio: 1.4 },
+      { id: 'queen-chamber', x: 400, y: 150, width: 160, height: 140, vx: 0, vy: 0, targetRatio: 1.4 },
+      { id: 'prince-chamber-1', x: 200, y: 320, width: 130, height: 110, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'prince-chamber-2', x: 360, y: 320, width: 130, height: 110, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'princess-chamber', x: 280, y: 460, width: 130, height: 110, vx: 0, vy: 0, targetRatio: 1.3 },
+
+      // Royal Studies & Libraries
+      { id: 'royal-study', x: 100, y: 600, width: 140, height: 120, vx: 0, vy: 0, targetRatio: 1.4 },
+      { id: 'royal-library', x: 100, y: 760, width: 200, height: 160, vx: 0, vy: 0, targetRatio: 1.6 },
+      { id: 'royal-archives', x: 330, y: 800, width: 140, height: 110, vx: 0, vy: 0, targetRatio: 1.4 },
+
+      // Dining & Kitchen Areas
+      { id: 'grand-dining', x: 950, y: 150, width: 220, height: 150, vx: 0, vy: 0, targetRatio: 1.7 },
+      { id: 'formal-dining', x: 1200, y: 150, width: 160, height: 120, vx: 0, vy: 0, targetRatio: 1.5 },
+      { id: 'breakfast-room', x: 1100, y: 320, width: 120, height: 100, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'main-kitchen', x: 1250, y: 320, width: 170, height: 140, vx: 0, vy: 0, targetRatio: 1.4 },
+      { id: 'secondary-kitchen', x: 1250, y: 490, width: 130, height: 110, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'pantry', x: 1100, y: 450, width: 110, height: 90, vx: 0, vy: 0, targetRatio: 1.2 },
+      { id: 'wine-cellar', x: 1240, y: 630, width: 130, height: 100, vx: 0, vy: 0, targetRatio: 1.4 },
+
+      // Galleries & Art Spaces
+      { id: 'great-gallery', x: 530, y: 800, width: 240, height: 160, vx: 0, vy: 0, targetRatio: 2.0 },
+      { id: 'portrait-gallery', x: 810, y: 800, width: 200, height: 140, vx: 0, vy: 0, targetRatio: 1.7 },
+
+      // Religious Spaces
+      { id: 'chapel', x: 100, y: 150, width: 160, height: 140, vx: 0, vy: 0, targetRatio: 1.5 },
+      { id: 'prayer-room', x: 100, y: 320, width: 110, height: 100, vx: 0, vy: 0, targetRatio: 1.2 },
+
+      // Administrative & Strategic
+      { id: 'treasury', x: 100, y: 450, width: 130, height: 110, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'war-room', x: 520, y: 320, width: 150, height: 130, vx: 0, vy: 0, targetRatio: 1.4 },
+      { id: 'council-chamber', x: 520, y: 150, width: 160, height: 130, vx: 0, vy: 0, targetRatio: 1.5 },
+
+      // Guard Rooms & Security
+      { id: 'guard-north', x: 700, y: 900, width: 110, height: 90, vx: 0, vy: 0, targetRatio: 1.2 },
+      { id: 'guard-south', x: 700, y: 80, width: 110, height: 90, vx: 0, vy: 0, targetRatio: 1.2 },
+      { id: 'guard-east', x: 1360, y: 500, width: 90, height: 110, vx: 0, vy: 0, targetRatio: 1.0 },
+      { id: 'guard-west', x: 80, y: 500, width: 90, height: 110, vx: 0, vy: 0, targetRatio: 1.0 },
+      { id: 'armory', x: 950, y: 480, width: 140, height: 110, vx: 0, vy: 0, targetRatio: 1.4 },
+
+      // Guest & Servant Areas
+      { id: 'guest-chamber-1', x: 1100, y: 600, width: 120, height: 100, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'guest-chamber-2', x: 1100, y: 730, width: 120, height: 100, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'guest-chamber-3', x: 1100, y: 860, width: 120, height: 100, vx: 0, vy: 0, targetRatio: 1.3 },
+      { id: 'servant-hall', x: 1260, y: 760, width: 150, height: 110, vx: 0, vy: 0, targetRatio: 1.5 },
+      { id: 'servant-quarters', x: 1260, y: 900, width: 140, height: 100, vx: 0, vy: 0, targetRatio: 1.4 },
+
+      // Courtyards & Gardens
+      { id: 'garden-court', x: 320, y: 600, width: 150, height: 150, vx: 0, vy: 0, targetRatio: 1.0 },
+      { id: 'fountain-court', x: 1050, y: 100, width: 130, height: 130, vx: 0, vy: 0, targetRatio: 1.0 },
+      { id: 'grand-terrace', x: 850, y: 100, width: 170, height: 130, vx: 0, vy: 0, targetRatio: 1.5 },
+    ],
+    adjacencies: [
+      // Entrance connections
+      { a: 'grand-entrance', b: 'main-throne', weight: 3.0 },
+      { a: 'grand-entrance', b: 'council-chamber', weight: 2.0 },
+      { a: 'grand-entrance', b: 'guard-south', weight: 2.5 },
+      { a: 'grand-entrance', b: 'grand-terrace', weight: 2.0 },
+      { a: 'grand-entrance', b: 'fountain-court', weight: 1.5 },
+
+      // Throne room connections
+      { a: 'main-throne', b: 'lesser-throne', weight: 2.5 },
+      { a: 'main-throne', b: 'council-chamber', weight: 2.5 },
+      { a: 'main-throne', b: 'war-room', weight: 2.0 },
+      { a: 'main-throne', b: 'grand-ballroom', weight: 2.0 },
+
+      // Ballroom connections
+      { a: 'grand-ballroom', b: 'small-ballroom', weight: 2.0 },
+      { a: 'grand-ballroom', b: 'great-gallery', weight: 2.5 },
+      { a: 'small-ballroom', b: 'portrait-gallery', weight: 2.0 },
+
+      // Royal quarters interconnections
+      { a: 'king-chamber', b: 'queen-chamber', weight: 3.0 },
+      { a: 'king-chamber', b: 'royal-study', weight: 2.5 },
+      { a: 'king-chamber', b: 'chapel', weight: 2.0 },
+      { a: 'queen-chamber', b: 'princess-chamber', weight: 2.0 },
+      { a: 'prince-chamber-1', b: 'prince-chamber-2', weight: 2.0 },
+      { a: 'prince-chamber-1', b: 'king-chamber', weight: 1.5 },
+
+      // Study & library connections
+      { a: 'royal-study', b: 'royal-library', weight: 2.5 },
+      { a: 'royal-library', b: 'royal-archives', weight: 2.5 },
+      { a: 'royal-study', b: 'war-room', weight: 1.5 },
+
+      // Dining area connections
+      { a: 'grand-dining', b: 'formal-dining', weight: 2.0 },
+      { a: 'formal-dining', b: 'breakfast-room', weight: 2.0 },
+      { a: 'breakfast-room', b: 'main-kitchen', weight: 2.5 },
+      { a: 'main-kitchen', b: 'secondary-kitchen', weight: 2.5 },
+      { a: 'main-kitchen', b: 'pantry', weight: 2.0 },
+      { a: 'pantry', b: 'wine-cellar', weight: 2.0 },
+      { a: 'grand-dining', b: 'main-throne', weight: 1.5 },
+
+      // Gallery connections
+      { a: 'great-gallery', b: 'portrait-gallery', weight: 2.5 },
+      { a: 'portrait-gallery', b: 'guard-north', weight: 1.0 },
+
+      // Religious connections
+      { a: 'chapel', b: 'prayer-room', weight: 2.5 },
+      { a: 'prayer-room', b: 'treasury', weight: 1.5 },
+
+      // Administrative connections
+      { a: 'council-chamber', b: 'war-room', weight: 2.5 },
+      { a: 'war-room', b: 'armory', weight: 2.0 },
+      { a: 'treasury', b: 'guard-west', weight: 2.0 },
+
+      // Guard connections
+      { a: 'guard-north', b: 'guard-south', weight: 1.0 },
+      { a: 'guard-east', b: 'guard-west', weight: 1.0 },
+      { a: 'armory', b: 'guard-east', weight: 2.0 },
+      { a: 'armory', b: 'lesser-throne', weight: 1.5 },
+
+      // Guest area connections
+      { a: 'guest-chamber-1', b: 'guest-chamber-2', weight: 1.5 },
+      { a: 'guest-chamber-2', b: 'guest-chamber-3', weight: 1.5 },
+      { a: 'guest-chamber-1', b: 'small-ballroom', weight: 1.5 },
+
+      // Servant area connections
+      { a: 'servant-hall', b: 'servant-quarters', weight: 2.5 },
+      { a: 'servant-hall', b: 'main-kitchen', weight: 2.0 },
+      { a: 'servant-quarters', b: 'guest-chamber-3', weight: 1.5 },
+
+      // Courtyard connections
+      { a: 'garden-court', b: 'grand-ballroom', weight: 2.0 },
+      { a: 'garden-court', b: 'princess-chamber', weight: 1.5 },
+      { a: 'fountain-court', b: 'grand-dining', weight: 1.5 },
+      { a: 'grand-terrace', b: 'lesser-throne', weight: 1.5 },
     ],
   },
 };
@@ -363,7 +508,7 @@ const meta: Meta<SpringVisualizationArgs> = {
   argTypes: {
     template: {
       control: { type: 'select' },
-      options: ['small-apartment', 'office-suite', 'house', 'gallery', 'clinic', 'restaurant'],
+      options: ['small-apartment', 'office-suite', 'house', 'gallery', 'clinic', 'restaurant', 'palace'],
       description: 'Room configuration template',
     },
     populationSize: {
@@ -436,7 +581,7 @@ export const Default: Story = {
     mutationStrength: 40,
     crossoverRate: 0.5,
     selectionPressure: 0.9,
-    fitnessBalance: 0.9,
+    fitnessBalance: 0.6,
     aspectRatioMutationRate: 0.3,
     boundaryScale: 1.0,
     globalTargetRatio: 2,
