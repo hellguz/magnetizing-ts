@@ -445,10 +445,10 @@ export class Gene {
       const gapY = Math.max(0, centerDistanceY - (roomA.height + roomB.height) / 2);
 
       // Use Euclidean distance of gaps for smoother gradient
-      const distance = Math.sqrt(gapX * gapX + gapY * gapY);
+      const distanceSq = gapX * gapX + gapY * gapY;
 
       // FEATURE: Apply quadratic penalty if enabled
-      const penalty = config.useQuadraticPenalty ? (distance * distance) : distance;
+      const penalty = config.useQuadraticPenalty ? distanceSq : Math.sqrt(distanceSq);
 
       totalDistance += penalty * (adj.weight ?? 1.0);
     }
@@ -526,9 +526,9 @@ export class Gene {
         const connectedNeighbor = this.findConnectedNeighbor(room, adjacencies);
 
         if (connectedNeighbor) {
-          // Move 10% closer to the neighbor
-          const dx = (connectedNeighbor.x - room.x) * 0.1;
-          const dy = (connectedNeighbor.y - room.y) * 0.1;
+          // Move 20% closer to the neighbor
+          const dx = (connectedNeighbor.x - room.x) * 0.2;
+          const dy = (connectedNeighbor.y - room.y) * 0.2;
           room.x += dx;
           room.y += dy;
           mutationApplied = true;
