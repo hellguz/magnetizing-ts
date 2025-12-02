@@ -512,17 +512,39 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     return { x: x / points.length, y: y / points.length };
   }, []);
 
+  // Helper: Calculate area of a polygon using shoelace formula
+  const calculatePolygonArea = useCallback((points: Vec2[]) => {
+    let area = 0;
+    for (let i = 0; i < points.length; i++) {
+      const j = (i + 1) % points.length;
+      area += points[i].x * points[j].y;
+      area -= points[j].x * points[i].y;
+    }
+    return Math.abs(area / 2);
+  }, []);
+
+  // Helper: Calculate total area of all rooms
+  const calculateTotalRoomArea = useCallback((rooms: RoomState[]) => {
+    return rooms.reduce((sum, room) => sum + room.width * room.height, 0);
+  }, []);
+
   // Initialize boundary when template or boundary scale changes
   React.useEffect(() => {
     const template = springTemplates[args.template];
     templateRef.current = template;
-    const { boundary: templateBoundary } = template;
+    const { boundary: templateBoundary, rooms } = template;
 
-    // Apply boundary scaling towards centroid
+    // Calculate the scale factor to match boundary area with total room area
+    const totalRoomArea = calculateTotalRoomArea(rooms);
+    const templateBoundaryArea = calculatePolygonArea(templateBoundary);
+    const areaScale = Math.sqrt(totalRoomArea / templateBoundaryArea);
+
+    // Apply boundary scaling towards centroid (area-based scale + manual scale)
     const centroid = calculateCentroid(templateBoundary);
+    const combinedScale = areaScale * args.boundaryScale;
     const boundary = templateBoundary.map(p => ({
-      x: centroid.x + (p.x - centroid.x) * args.boundaryScale,
-      y: centroid.y + (p.y - centroid.y) * args.boundaryScale
+      x: centroid.x + (p.x - centroid.x) * combinedScale,
+      y: centroid.y + (p.y - centroid.y) * combinedScale
     }));
 
     scaledBoundaryRef.current = boundary;
@@ -532,9 +554,9 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     const centerX = boundary.reduce((sum, p) => sum + p.x, 0) / boundary.length;
     const centerY = boundary.reduce((sum, p) => sum + p.y, 0) / boundary.length;
     initialCameraTargetRef.current = [centerX, centerY, 0];
-  }, [args.template, args.boundaryScale, calculateCentroid]);
+  }, [args.template, args.boundaryScale, calculateCentroid, calculatePolygonArea, calculateTotalRoomArea]);
 
-  // Recreate solver when solver parameters change
+  // Recreate solver when solver parameters or template change
   React.useEffect(() => {
     const template = templateRef.current;
     if (!template) return;
@@ -554,7 +576,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
 
   // Handle boundary changes from editor
   const handleBoundaryChange = useCallback((newPoints: Vec2[]) => {
@@ -579,7 +601,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
 
   // Handle reset generation
   const handleReset = useCallback(() => {
@@ -602,7 +624,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
 
   // Animation loop controlled by autoPlay prop
   React.useEffect(() => {
