@@ -901,7 +901,7 @@ export const Default: Story = {
 
     // Advanced Optimization Features (all disabled by default for comparison)
     useQuadraticPenalty: true,
-    useSimulatedAnnealing: true,
+    useSimulatedAnnealing: false,
     useSwapMutation: true,
     swapMutationRate: 0.4,
     usePartnerBias: true,
