@@ -36,6 +36,8 @@ export class Gene {
    * 1. Detect overlapping rooms using Clipper
    * 2. For each overlap, attempt to SCALE (squish) dimensions to resolve
    * 3. If scaling violates aspect ratio constraints, TRANSLATE (move) instead
+   *
+   * FIXED: Now includes multiple iterations to resolve chain reactions
    */
   applySquishCollisions(boundary: Vec2[], config: SpringConfig, globalTargetRatio?: number): void {
     // FEATURE: Aggressive Inflation - grow rooms before collision resolution
@@ -44,41 +46,53 @@ export class Gene {
     }
 
     const n = this.rooms.length;
+    const MAX_ITERATIONS = 5; // Multiple passes to resolve chain reactions
 
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const roomA = this.rooms[i];
-        const roomB = this.rooms[j];
+    for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+      let hadCollision = false;
 
-        // Create polygon representations
-        const polyA = Polygon.createRectangle(roomA.x, roomA.y, roomA.width, roomA.height);
-        const polyB = Polygon.createRectangle(roomB.x, roomB.y, roomB.width, roomB.height);
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const roomA = this.rooms[i];
+          const roomB = this.rooms[j];
 
-        // AABB check for early exit
-        const aabbA = Polygon.calculateAABB(polyA);
-        const aabbB = Polygon.calculateAABB(polyB);
+          // Create polygon representations
+          const polyA = Polygon.createRectangle(roomA.x, roomA.y, roomA.width, roomA.height);
+          const polyB = Polygon.createRectangle(roomB.x, roomB.y, roomB.width, roomB.height);
 
-        if (!Polygon.aabbIntersects(aabbA, aabbB)) {
-          continue;
-        }
+          // AABB check for early exit
+          const aabbA = Polygon.calculateAABB(polyA);
+          const aabbB = Polygon.calculateAABB(polyB);
 
-        // Precise intersection check
-        const overlapArea = Polygon.intersectionArea(polyA, polyB);
+          if (!Polygon.aabbIntersects(aabbA, aabbB)) {
+            continue;
+          }
 
-        if (overlapArea > 0.01) {
-          // Calculate overlap direction (which dimension overlaps more?)
-          const overlapX = Math.min(aabbA.maxX, aabbB.maxX) - Math.max(aabbA.minX, aabbB.minX);
-          const overlapY = Math.min(aabbA.maxY, aabbB.maxY) - Math.max(aabbA.minY, aabbB.minY);
+          // Precise intersection check
+          const overlapArea = Polygon.intersectionArea(polyA, polyB);
 
-          // Try to squish along the smaller overlap dimension
-          if (overlapX < overlapY) {
-            // Overlap is more horizontal, try to squish widths
-            this.trySquishHorizontal(roomA, roomB, overlapX, globalTargetRatio);
-          } else {
-            // Overlap is more vertical, try to squish heights
-            this.trySquishVertical(roomA, roomB, overlapY, globalTargetRatio);
+          if (overlapArea > 0.01) {
+            hadCollision = true;
+
+            // Calculate overlap direction (which dimension overlaps more?)
+            const overlapX = Math.min(aabbA.maxX, aabbB.maxX) - Math.max(aabbA.minX, aabbB.minX);
+            const overlapY = Math.min(aabbA.maxY, aabbB.maxY) - Math.max(aabbA.minY, aabbB.minY);
+
+            // Try to squish along the smaller overlap dimension
+            if (overlapX < overlapY) {
+              // Overlap is more horizontal, try to squish widths
+              this.trySquishHorizontal(roomA, roomB, overlapX, globalTargetRatio);
+            } else {
+              // Overlap is more vertical, try to squish heights
+              this.trySquishVertical(roomA, roomB, overlapY, globalTargetRatio);
+            }
           }
         }
+      }
+
+      // If no collisions were found this iteration, we're done
+      if (!hadCollision) {
+        break;
       }
     }
 
@@ -89,6 +103,10 @@ export class Gene {
   /**
    * Attempt to squish rooms horizontally (reduce width, increase height).
    * If aspect ratio limits are violated, translate instead.
+   *
+   * FIXED: Now adjusts x position when squishing to actually resolve collisions.
+   * When a room on the RIGHT is squished, we increase its x (move left edge right)
+   * while decreasing width (move right edge left). This "squishes from the left".
    */
   private trySquishHorizontal(roomA: RoomStateES, roomB: RoomStateES, overlap: number, globalTargetRatio?: number): void {
     const shrinkAmount = overlap * 0.5 + 0.1; // Small buffer
@@ -120,10 +138,23 @@ export class Gene {
 
     if (validA && validB) {
       // Both can squish - apply the transformation
-      roomA.width = newWidthA;
-      roomA.height = newHeightA;
-      roomB.width = newWidthB;
-      roomB.height = newHeightB;
+      // CRITICAL FIX: Determine which room is on the right
+      // The room on the right needs its x position adjusted when width shrinks
+      if (roomA.x < roomB.x) {
+        // Room B is on the right - increase its x while decreasing width
+        roomA.width = newWidthA;
+        roomA.height = newHeightA;
+        roomB.x += shrinkAmount; // Move left edge to the right
+        roomB.width = newWidthB;
+        roomB.height = newHeightB;
+      } else {
+        // Room A is on the right - increase its x while decreasing width
+        roomA.x += shrinkAmount; // Move left edge to the right
+        roomA.width = newWidthA;
+        roomA.height = newHeightA;
+        roomB.width = newWidthB;
+        roomB.height = newHeightB;
+      }
     } else {
       // Cannot squish - translate instead
       const moveX = overlap * 0.5 + 0.1;
@@ -140,6 +171,10 @@ export class Gene {
   /**
    * Attempt to squish rooms vertically (reduce height, increase width).
    * If aspect ratio limits are violated, translate instead.
+   *
+   * FIXED: Now adjusts y position when squishing to actually resolve collisions.
+   * When a room on the BOTTOM is squished, we increase its y (move top edge down)
+   * while decreasing height (move bottom edge up). This "squishes from the top".
    */
   private trySquishVertical(roomA: RoomStateES, roomB: RoomStateES, overlap: number, globalTargetRatio?: number): void {
     const shrinkAmount = overlap * 0.5 + 0.1; // Small buffer
@@ -171,10 +206,23 @@ export class Gene {
 
     if (validA && validB) {
       // Both can squish - apply the transformation
-      roomA.width = newWidthA;
-      roomA.height = newHeightA;
-      roomB.width = newWidthB;
-      roomB.height = newHeightB;
+      // CRITICAL FIX: Determine which room is on the bottom
+      // The room on the bottom needs its y position adjusted when height shrinks
+      if (roomA.y < roomB.y) {
+        // Room B is on the bottom - increase its y while decreasing height
+        roomA.width = newWidthA;
+        roomA.height = newHeightA;
+        roomB.y += shrinkAmount; // Move top edge down
+        roomB.width = newWidthB;
+        roomB.height = newHeightB;
+      } else {
+        // Room A is on the bottom - increase its y while decreasing height
+        roomA.y += shrinkAmount; // Move top edge down
+        roomA.width = newWidthA;
+        roomA.height = newHeightA;
+        roomB.width = newWidthB;
+        roomB.height = newHeightB;
+      }
     } else {
       // Cannot squish - translate instead
       const moveY = overlap * 0.5 + 0.1;
