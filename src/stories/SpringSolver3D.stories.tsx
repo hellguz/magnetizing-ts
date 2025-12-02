@@ -787,7 +787,7 @@ const meta: Meta<SpringVisualizationArgs> = {
       description: 'Rate of offspring generation',
     },
     selectionPressure: {
-      control: { type: 'range', min: 0.1, max: 0.5, step: 0.05 },
+      control: { type: 'range', min: 0.1, max: 1, step: 0.05 },
       description: 'Percentage of population to cull',
     },
     fitnessBalance: {
@@ -889,7 +889,7 @@ export const Default: Story = {
     mutationRate: 0.5,
     mutationStrength: 40,
     crossoverRate: 0.5,
-    selectionPressure: 0.25,
+    selectionPressure: 0.7,
     fitnessBalance: 0.5,
     aspectRatioMutationRate: 0.3,
     boundaryScale: 1.0,
@@ -909,7 +909,7 @@ export const Default: Story = {
     useCenterGravity: false,
     centerGravityRate: 0.3,
     centerGravityStrength: 0.05,
-    useAggressiveInflation: false,
+    useAggressiveInflation: true,
     inflationRate: 1.02,
     inflationThreshold: 1.05,
   },
