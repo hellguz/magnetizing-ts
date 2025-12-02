@@ -403,6 +403,8 @@ export class Gene {
 
   /**
    * FitnessT: Calculate sum of distances between connected rooms
+   * Uses edge-to-edge distance (gap distance) instead of center-to-center.
+   * If rooms overlap or touch, distance is 0. Otherwise, measures the actual gap.
    * FEATURE: Quadratic Penalty - use distance^2 to exponentially penalize stretched connections
    */
   private calculateTopologicalFitness(adjacencies: Adjacency[], config: SpringConfig): number {
@@ -414,7 +416,7 @@ export class Gene {
 
       if (!roomA || !roomB) continue;
 
-      // Calculate center-to-center distance
+      // Calculate room centers
       const centerA: Vec2 = {
         x: roomA.x + roomA.width / 2,
         y: roomA.y + roomA.height / 2,
@@ -424,9 +426,17 @@ export class Gene {
         y: roomB.y + roomB.height / 2,
       };
 
-      const dx = centerB.x - centerA.x;
-      const dy = centerB.y - centerA.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      // Calculate edge-to-edge distance (gap distance)
+      // Horizontal gap: max(0, |centerA.x - centerB.x| - (widthA + widthB)/2)
+      // Vertical gap: max(0, |centerA.y - centerB.y| - (heightA + heightB)/2)
+      const centerDistanceX = Math.abs(centerA.x - centerB.x);
+      const centerDistanceY = Math.abs(centerA.y - centerB.y);
+
+      const gapX = Math.max(0, centerDistanceX - (roomA.width + roomB.width) / 2);
+      const gapY = Math.max(0, centerDistanceY - (roomA.height + roomB.height) / 2);
+
+      // Use Euclidean distance of gaps for smoother gradient
+      const distance = Math.sqrt(gapX * gapX + gapY * gapY);
 
       // FEATURE: Apply quadratic penalty if enabled
       const penalty = config.useQuadraticPenalty ? (distance * distance) : distance;
