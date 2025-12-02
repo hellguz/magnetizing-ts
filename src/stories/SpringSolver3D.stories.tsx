@@ -31,6 +31,20 @@ interface SpringVisualizationArgs {
   showAdjacencies: boolean;
   showBoundary: boolean;
   editBoundary: boolean;
+
+  // Advanced optimization features
+  useQuadraticPenalty: boolean;
+  useSimulatedAnnealing: boolean;
+  useSwapMutation: boolean;
+  swapMutationRate: number;
+  usePartnerBias: boolean;
+  partnerBiasRate: number;
+  useCenterGravity: boolean;
+  centerGravityRate: number;
+  centerGravityStrength: number;
+  useAggressiveInflation: boolean;
+  inflationRate: number;
+  inflationThreshold: number;
 }
 
 const springTemplates: Record<TemplateType, SpringTemplate> = {
@@ -573,10 +587,22 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       selectionPressure: args.selectionPressure,
       fitnessBalance: args.fitnessBalance,
       aspectRatioMutationRate: args.aspectRatioMutationRate,
+      useQuadraticPenalty: args.useQuadraticPenalty,
+      useSimulatedAnnealing: args.useSimulatedAnnealing,
+      useSwapMutation: args.useSwapMutation,
+      swapMutationRate: args.swapMutationRate,
+      usePartnerBias: args.usePartnerBias,
+      partnerBiasRate: args.partnerBiasRate,
+      useCenterGravity: args.useCenterGravity,
+      centerGravityRate: args.centerGravityRate,
+      centerGravityStrength: args.centerGravityStrength,
+      useAggressiveInflation: args.useAggressiveInflation,
+      inflationRate: args.inflationRate,
+      inflationThreshold: args.inflationThreshold,
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold]);
 
   // Handle boundary changes from editor
   const handleBoundaryChange = useCallback((newPoints: Vec2[]) => {
@@ -598,10 +624,22 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       selectionPressure: args.selectionPressure,
       fitnessBalance: args.fitnessBalance,
       aspectRatioMutationRate: args.aspectRatioMutationRate,
+      useQuadraticPenalty: args.useQuadraticPenalty,
+      useSimulatedAnnealing: args.useSimulatedAnnealing,
+      useSwapMutation: args.useSwapMutation,
+      swapMutationRate: args.swapMutationRate,
+      usePartnerBias: args.usePartnerBias,
+      partnerBiasRate: args.partnerBiasRate,
+      useCenterGravity: args.useCenterGravity,
+      centerGravityRate: args.centerGravityRate,
+      centerGravityStrength: args.centerGravityStrength,
+      useAggressiveInflation: args.useAggressiveInflation,
+      inflationRate: args.inflationRate,
+      inflationThreshold: args.inflationThreshold,
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold]);
 
   // Handle reset generation
   const handleReset = useCallback(() => {
@@ -621,10 +659,22 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       selectionPressure: args.selectionPressure,
       fitnessBalance: args.fitnessBalance,
       aspectRatioMutationRate: args.aspectRatioMutationRate,
+      useQuadraticPenalty: args.useQuadraticPenalty,
+      useSimulatedAnnealing: args.useSimulatedAnnealing,
+      useSwapMutation: args.useSwapMutation,
+      swapMutationRate: args.swapMutationRate,
+      usePartnerBias: args.usePartnerBias,
+      partnerBiasRate: args.partnerBiasRate,
+      useCenterGravity: args.useCenterGravity,
+      centerGravityRate: args.centerGravityRate,
+      centerGravityStrength: args.centerGravityStrength,
+      useAggressiveInflation: args.useAggressiveInflation,
+      inflationRate: args.inflationRate,
+      inflationThreshold: args.inflationThreshold,
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold]);
 
   // Animation loop controlled by autoPlay prop
   React.useEffect(() => {
@@ -683,7 +733,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
           position: 'absolute',
           top: '10px',
           left: '10px',
-          background: 'rgba(255, 255, 255, 0.9)',
+          background: 'rgba(255, 255, 255, 0)',
           padding: '10px',
           borderRadius: '4px',
           fontFamily: 'monospace',
@@ -705,27 +755,6 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
         Converged: {solverRef.current?.hasConverged(0.01) ? 'Yes' : 'No'}
         <br />
         Auto-Play: {args.autoPlay ? 'On' : 'Off'}
-        <br />
-        <br />
-        <button
-          onClick={handleReset}
-          style={{
-            padding: '8px 16px',
-            background: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            width: '100%',
-            marginBottom: '8px',
-          }}
-        >
-          Reset Generation
-        </button>
-        <em>Right-drag to pan, scroll to zoom</em>
       </div>
     </div>
   );
@@ -793,6 +822,56 @@ const meta: Meta<SpringVisualizationArgs> = {
       control: { type: 'boolean' },
       description: 'Enable interactive boundary editing (drag vertices, click midpoints to add)',
     },
+
+    // Advanced Optimization Features
+    useQuadraticPenalty: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Quadratic Penalty: Use distance^2 for topological fitness (exponentially penalizes stretched connections)',
+    },
+    useSimulatedAnnealing: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Simulated Annealing: Decay mutation strength over generations (prevents local minima)',
+    },
+    useSwapMutation: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Swap Mutation: Randomly swap room positions to untangle topology',
+    },
+    swapMutationRate: {
+      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
+      description: 'Probability of swap mutation (only if useSwapMutation is enabled)',
+    },
+    usePartnerBias: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Partner Bias: Bias mutations toward connected neighbors (guides adjacency)',
+    },
+    partnerBiasRate: {
+      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
+      description: 'Probability of biased mutation toward partner (only if usePartnerBias is enabled)',
+    },
+    useCenterGravity: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Center Gravity: Pull rooms toward centroid (prevents explosion)',
+    },
+    centerGravityRate: {
+      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
+      description: 'Probability of center gravity pull (only if useCenterGravity is enabled)',
+    },
+    centerGravityStrength: {
+      control: { type: 'range', min: 0.0, max: 0.2, step: 0.01 },
+      description: 'Strength of center gravity pull (only if useCenterGravity is enabled)',
+    },
+    useAggressiveInflation: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Aggressive Inflation: Force rooms to grow beyond bounds before squish (fills voids)',
+    },
+    inflationRate: {
+      control: { type: 'range', min: 1.0, max: 1.1, step: 0.01 },
+      description: 'Growth rate per iteration (e.g., 1.02 = 2% growth, only if useAggressiveInflation is enabled)',
+    },
+    inflationThreshold: {
+      control: { type: 'range', min: 1.0, max: 1.2, step: 0.01 },
+      description: 'Max overgrowth (e.g., 1.05 = 5% larger than target, only if useAggressiveInflation is enabled)',
+    },
   },
   parameters: {
     layout: 'fullscreen',
@@ -819,5 +898,19 @@ export const Default: Story = {
     showAdjacencies: true,
     showBoundary: true,
     editBoundary: true,
+
+    // Advanced Optimization Features (all disabled by default for comparison)
+    useQuadraticPenalty: false,
+    useSimulatedAnnealing: false,
+    useSwapMutation: false,
+    swapMutationRate: 0.1,
+    usePartnerBias: false,
+    partnerBiasRate: 0.4,
+    useCenterGravity: false,
+    centerGravityRate: 0.3,
+    centerGravityStrength: 0.05,
+    useAggressiveInflation: false,
+    inflationRate: 1.02,
+    inflationThreshold: 1.05,
   },
 };

@@ -12,6 +12,7 @@ export class GeneCollection {
   private adjacencies: Adjacency[];
   private config: SpringConfig;
   private globalTargetRatio: number | undefined;
+  private currentGeneration: number = 0; // Track generation for simulated annealing
 
   constructor(
     initialRooms: RoomStateES[],
@@ -40,7 +41,7 @@ export class GeneCollection {
     // Create the rest of the population with mutations
     for (let i = 1; i < this.config.populationSize; i++) {
       const gene = baseGene.clone();
-      gene.mutate(0.5, this.config.mutationStrength * 2, this.config.aspectRatioMutationRate, this.globalTargetRatio); // Higher initial mutation
+      gene.mutate(0.5, this.config.mutationStrength * 2, this.config.aspectRatioMutationRate, this.globalTargetRatio, this.config, this.adjacencies); // Higher initial mutation
       this.genes.push(gene);
     }
   }
@@ -53,16 +54,24 @@ export class GeneCollection {
    * 4. Perform crossover
    * 5. Mutate offspring
    * 6. Cull worst performers
+   *
+   * FEATURE: Simulated Annealing - decay mutation strength over generations
    */
   iterate(): void {
+    // FEATURE: Simulated Annealing - calculate annealed mutation strength
+    const progress = this.currentGeneration / this.config.maxGenerations;
+    const annealedMutationStrength = this.config.useSimulatedAnnealing
+      ? this.config.mutationStrength * (1.0 - progress)
+      : this.config.mutationStrength;
+
     // Step 1: Apply collision resolution to all genes
     for (const gene of this.genes) {
-      gene.applySquishCollisions(this.boundary, this.globalTargetRatio);
+      gene.applySquishCollisions(this.boundary, this.config, this.globalTargetRatio);
     }
 
     // Step 2: Calculate fitness for all genes
     for (const gene of this.genes) {
-      gene.calculateFitness(this.boundary, this.adjacencies, this.config.fitnessBalance);
+      gene.calculateFitness(this.boundary, this.adjacencies, this.config.fitnessBalance, this.config);
     }
 
     // Step 3: Sort by fitness (lower is better)
@@ -85,9 +94,16 @@ export class GeneCollection {
       offspring.push(child);
     }
 
-    // Step 5: Mutate offspring
+    // Step 5: Mutate offspring (with annealed mutation strength)
     for (const child of offspring) {
-      child.mutate(this.config.mutationRate, this.config.mutationStrength, this.config.aspectRatioMutationRate, this.globalTargetRatio);
+      child.mutate(
+        this.config.mutationRate,
+        annealedMutationStrength,
+        this.config.aspectRatioMutationRate,
+        this.globalTargetRatio,
+        this.config,
+        this.adjacencies
+      );
     }
 
     // Step 6: Add offspring to population
@@ -101,9 +117,19 @@ export class GeneCollection {
     while (this.genes.length < this.config.populationSize) {
       const randomGene = this.genes[Math.floor(Math.random() * this.genes.length)];
       const clone = randomGene.clone();
-      clone.mutate(this.config.mutationRate, this.config.mutationStrength, this.config.aspectRatioMutationRate, this.globalTargetRatio);
+      clone.mutate(
+        this.config.mutationRate,
+        annealedMutationStrength,
+        this.config.aspectRatioMutationRate,
+        this.globalTargetRatio,
+        this.config,
+        this.adjacencies
+      );
       this.genes.push(clone);
     }
+
+    // Increment generation counter for simulated annealing
+    this.currentGeneration++;
   }
 
   /**

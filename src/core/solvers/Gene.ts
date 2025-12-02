@@ -1,4 +1,4 @@
-import { RoomStateES, Adjacency } from '../../types.js';
+import { RoomStateES, Adjacency, SpringConfig } from '../../types.js';
 import { Vec2 } from '../geometry/Vector2.js';
 import { Polygon } from '../geometry/Polygon.js';
 
@@ -37,7 +37,12 @@ export class Gene {
    * 2. For each overlap, attempt to SCALE (squish) dimensions to resolve
    * 3. If scaling violates aspect ratio constraints, TRANSLATE (move) instead
    */
-  applySquishCollisions(boundary: Vec2[], globalTargetRatio?: number): void {
+  applySquishCollisions(boundary: Vec2[], config: SpringConfig, globalTargetRatio?: number): void {
+    // FEATURE: Aggressive Inflation - grow rooms before collision resolution
+    if (config.useAggressiveInflation) {
+      this.applyAggressiveInflation(config);
+    }
+
     const n = this.rooms.length;
 
     for (let i = 0; i < n; i++) {
@@ -184,6 +189,28 @@ export class Gene {
   }
 
   /**
+   * FEATURE: Aggressive Inflation
+   * Force rooms to grow beyond their target area to fill voids.
+   * The subsequent squish logic will resolve overlaps naturally.
+   */
+  private applyAggressiveInflation(config: SpringConfig): void {
+    const inflationRate = config.inflationRate ?? 1.02; // Default 2% growth
+    const inflationThreshold = config.inflationThreshold ?? 1.05; // Default 5% max overgrowth
+
+    for (const room of this.rooms) {
+      const currentArea = room.width * room.height;
+      const maxArea = room.targetArea * inflationThreshold;
+
+      // Only grow if below threshold
+      if (currentArea < maxArea) {
+        room.width *= inflationRate;
+        room.height *= inflationRate;
+        // Note: No collision check here - let squish resolve it
+      }
+    }
+  }
+
+  /**
    * Push rooms back into the boundary if they're outside.
    * Uses strict polygon containment instead of AABB clamping.
    */
@@ -253,9 +280,9 @@ export class Gene {
    * FitnessG: Total overlapping area + area outside boundary
    * FitnessT: Sum of distances between connected rooms
    */
-  calculateFitness(boundary: Vec2[], adjacencies: Adjacency[], balance: number): void {
+  calculateFitness(boundary: Vec2[], adjacencies: Adjacency[], balance: number, config: SpringConfig): void {
     this.fitnessG = this.calculateGeometricFitness(boundary);
-    this.fitnessT = this.calculateTopologicalFitness(adjacencies);
+    this.fitnessT = this.calculateTopologicalFitness(adjacencies, config);
 
     // Combined fitness (lower is better)
     // Note: We use 1/fitnessT to invert topological fitness (closer connections = better)
@@ -303,8 +330,9 @@ export class Gene {
 
   /**
    * FitnessT: Calculate sum of distances between connected rooms
+   * FEATURE: Quadratic Penalty - use distance^2 to exponentially penalize stretched connections
    */
-  private calculateTopologicalFitness(adjacencies: Adjacency[]): number {
+  private calculateTopologicalFitness(adjacencies: Adjacency[], config: SpringConfig): number {
     let totalDistance = 0;
 
     for (const adj of adjacencies) {
@@ -327,7 +355,10 @@ export class Gene {
       const dy = centerB.y - centerA.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      totalDistance += distance * (adj.weight ?? 1.0);
+      // FEATURE: Apply quadratic penalty if enabled
+      const penalty = config.useQuadraticPenalty ? (distance * distance) : distance;
+
+      totalDistance += penalty * (adj.weight ?? 1.0);
     }
 
     return totalDistance;
@@ -336,13 +367,72 @@ export class Gene {
   /**
    * Mutate this gene by randomly altering room positions and aspect ratios.
    * This explores the solution space by trying different configurations.
+   *
+   * Enhanced with:
+   * - Swap Mutation: Teleport rooms to untangle topology
+   * - Partner Bias: Move toward connected neighbors
+   * - Center Gravity: Pull toward centroid to prevent explosion
    */
-  mutate(mutationRate: number, mutationStrength: number, aspectRatioMutationRate?: number, globalTargetRatio?: number): void {
+  mutate(
+    mutationRate: number,
+    mutationStrength: number,
+    aspectRatioMutationRate: number | undefined,
+    globalTargetRatio: number | undefined,
+    config: SpringConfig,
+    adjacencies: Adjacency[]
+  ): void {
     const aspectMutationRate = aspectRatioMutationRate ?? mutationRate;
 
+    // FEATURE: Swap Mutation - teleport two random rooms to untangle topology
+    if (config.useSwapMutation && Math.random() < (config.swapMutationRate ?? 0.1)) {
+      const roomAIndex = Math.floor(Math.random() * this.rooms.length);
+      const roomBIndex = Math.floor(Math.random() * this.rooms.length);
+
+      if (roomAIndex !== roomBIndex) {
+        const roomA = this.rooms[roomAIndex];
+        const roomB = this.rooms[roomBIndex];
+
+        // Swap positions only (not dimensions)
+        const tempX = roomA.x;
+        const tempY = roomA.y;
+        roomA.x = roomB.x;
+        roomA.y = roomB.y;
+        roomB.x = tempX;
+        roomB.y = tempY;
+      }
+    }
+
+    // Calculate centroid for center gravity feature
+    const centroid = config.useCenterGravity ? this.calculateCentroid() : null;
+
     for (const room of this.rooms) {
-      // Position mutation
-      if (Math.random() < mutationRate) {
+      // FEATURE: Partner Bias - move toward connected neighbors
+      let mutationApplied = false;
+
+      if (config.usePartnerBias && Math.random() < (config.partnerBiasRate ?? 0.4)) {
+        // Find a connected neighbor
+        const connectedNeighbor = this.findConnectedNeighbor(room, adjacencies);
+
+        if (connectedNeighbor) {
+          // Move 10% closer to the neighbor
+          const dx = (connectedNeighbor.x - room.x) * 0.1;
+          const dy = (connectedNeighbor.y - room.y) * 0.1;
+          room.x += dx;
+          room.y += dy;
+          mutationApplied = true;
+        }
+      }
+
+      // FEATURE: Center Gravity - pull toward centroid
+      if (config.useCenterGravity && centroid && Math.random() < (config.centerGravityRate ?? 0.3)) {
+        const strength = config.centerGravityStrength ?? 0.05;
+        room.x += (centroid.x - room.x) * strength;
+        room.y += (centroid.y - room.y) * strength;
+        mutationApplied = true;
+      }
+
+      // Standard position mutation (if no special mutation applied)
+      if (!mutationApplied && Math.random() < mutationRate) {
         room.x += (Math.random() - 0.5) * mutationStrength;
         room.y += (Math.random() - 0.5) * mutationStrength;
       }
@@ -370,6 +460,48 @@ export class Gene {
       room.width = Math.max(1, room.width);
       room.height = Math.max(1, room.height);
     }
+  }
+
+  /**
+   * Calculate the geometric center of all rooms
+   */
+  private calculateCentroid(): Vec2 {
+    let sumX = 0;
+    let sumY = 0;
+
+    for (const room of this.rooms) {
+      sumX += room.x + room.width / 2;
+      sumY += room.y + room.height / 2;
+    }
+
+    return {
+      x: sumX / this.rooms.length,
+      y: sumY / this.rooms.length,
+    };
+  }
+
+  /**
+   * Find a random connected neighbor for the given room
+   */
+  private findConnectedNeighbor(room: RoomStateES, adjacencies: Adjacency[]): RoomStateES | null {
+    const neighbors: string[] = [];
+
+    // Find all connected room IDs
+    for (const adj of adjacencies) {
+      if (adj.a === room.id) {
+        neighbors.push(adj.b);
+      } else if (adj.b === room.id) {
+        neighbors.push(adj.a);
+      }
+    }
+
+    if (neighbors.length === 0) {
+      return null;
+    }
+
+    // Pick a random neighbor
+    const neighborId = neighbors[Math.floor(Math.random() * neighbors.length)];
+    return this.rooms.find(r => r.id === neighborId) ?? null;
   }
 
   /**
