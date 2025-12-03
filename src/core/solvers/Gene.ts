@@ -60,7 +60,7 @@ export class Gene {
     }
 
     const n = this.rooms.length;
-    const MAX_ITERATIONS = 5; // Multiple passes to resolve chain reactions
+    const MAX_ITERATIONS = 10; // Multiple passes to resolve chain reactions
 
     for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
       let hadCollision = false;

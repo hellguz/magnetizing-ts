@@ -76,11 +76,15 @@ export class GeneCollection {
     const offspring: Gene[] = [];
     const numOffspring = Math.floor(this.config.populationSize * this.config.crossoverRate);
 
+    // FIX: Widen the parent pool. Instead of top 50% (0.5), use top 90% (0.9) or 100%
+    // This allows "worse" genes (like fresh blood) a chance to pass on diversity before dying.
+    const parentPoolFraction = 0.5;
+    const parentPoolSize = Math.max(2, Math.floor(this.genes.length * parentPoolFraction));
+
     for (let i = 0; i < numOffspring; i++) {
-      // Select two random parents from the top half
-      const topHalfSize = Math.floor(this.genes.length / 2);
-      const parentAIndex = Math.floor(Math.random() * topHalfSize);
-      const parentBIndex = Math.floor(Math.random() * topHalfSize);
+      // Select random parents from the WIDER pool
+      const parentAIndex = Math.floor(Math.random() * parentPoolSize);
+      const parentBIndex = Math.floor(Math.random() * parentPoolSize);
 
       const parentA = this.genes[parentAIndex];
       const parentB = this.genes[parentBIndex];
