@@ -24,6 +24,12 @@ const DEFAULT_CENTER_GRAVITY_STRENGTH = 0.05;
 const DEFAULT_USE_AGGRESSIVE_INFLATION = false;
 const DEFAULT_INFLATION_RATE = 1.02;
 const DEFAULT_INFLATION_THRESHOLD = 1.05;
+const DEFAULT_WARM_UP_ITERATIONS = 0;
+const DEFAULT_USE_FRESH_BLOOD = false;
+const DEFAULT_FRESH_BLOOD_INTERVAL = 20;
+const DEFAULT_FRESH_BLOOD_WARM_UP = 100;
+const DEFAULT_USE_NON_LINEAR_OVERLAP_PENALTY = false;
+const DEFAULT_OVERLAP_PENALTY_EXPONENT = 1.5;
 
 /**
  * Spring solver using Evolutionary Strategy (Genetic Algorithm).
@@ -87,6 +93,12 @@ export class SpringSolver {
       useAggressiveInflation: config.useAggressiveInflation ?? DEFAULT_USE_AGGRESSIVE_INFLATION,
       inflationRate: config.inflationRate ?? DEFAULT_INFLATION_RATE,
       inflationThreshold: config.inflationThreshold ?? DEFAULT_INFLATION_THRESHOLD,
+      warmUpIterations: config.warmUpIterations ?? DEFAULT_WARM_UP_ITERATIONS,
+      useFreshBlood: config.useFreshBlood ?? DEFAULT_USE_FRESH_BLOOD,
+      freshBloodInterval: config.freshBloodInterval ?? DEFAULT_FRESH_BLOOD_INTERVAL,
+      freshBloodWarmUp: config.freshBloodWarmUp ?? DEFAULT_FRESH_BLOOD_WARM_UP,
+      useNonLinearOverlapPenalty: config.useNonLinearOverlapPenalty ?? DEFAULT_USE_NON_LINEAR_OVERLAP_PENALTY,
+      overlapPenaltyExponent: config.overlapPenaltyExponent ?? DEFAULT_OVERLAP_PENALTY_EXPONENT,
     };
 
     this.geneCollection = new GeneCollection(

@@ -58,6 +58,13 @@ export class GeneCollection {
    * FEATURE: Simulated Annealing - decay mutation strength over generations
    */
   iterate(): void {
+    // Log every 50 generations to track fresh blood impact
+    if (this.currentGeneration % 50 === 0 && this.currentGeneration > 0) {
+      const fitnesses = this.genes.map(g => g.fitness);
+      const avgFitness = fitnesses.reduce((a, b) => a + b, 0) / fitnesses.length;
+      console.log(`[Gen ${this.currentGeneration}] Population: ${this.genes.length} genes, Avg Fitness: ${avgFitness.toFixed(2)}, Best: ${Math.min(...fitnesses).toFixed(2)}`);
+    }
+
     // FEATURE: Simulated Annealing - calculate annealed mutation strength
     const progress = this.currentGeneration / this.config.maxGenerations;
     const annealedMutationStrength = this.config.useSimulatedAnnealing
@@ -147,17 +154,37 @@ export class GeneCollection {
 
     // FEATURE: Fresh Blood - periodically replace worst performers with new random genes
     // This maintains genetic diversity and prevents premature convergence
+
+    // DEBUG: Log config at gen 50 to verify it's being passed correctly
+    if (this.currentGeneration === 50) {
+      console.log(`🔍 [Gen 50] DEBUG Config Check:`);
+      console.log(`   useFreshBlood: ${this.config.useFreshBlood}`);
+      console.log(`   freshBloodInterval: ${this.config.freshBloodInterval}`);
+      console.log(`   freshBloodWarmUp: ${this.config.freshBloodWarmUp}`);
+    }
+
     if (this.config.useFreshBlood) {
       const interval = this.config.freshBloodInterval ?? 20;
-      const warmUp = this.config.freshBloodWarmUp ?? 30;
 
-      if (this.currentGeneration % interval === 0) {
-        // Sort by fitness to identify worst performers (lower is better, so worst are at the end)
-        this.genes.sort((a, b) => a.fitness - b.fitness);
+      // Skip generation 0 (population is already random at initialization)
+      if (this.currentGeneration > 0 && this.currentGeneration % interval === 0) {
+        try {
+          console.log(`\n🩸 [Gen ${this.currentGeneration}] ========== FRESH BLOOD INJECTION ==========`);
+
+          // Sort by fitness to identify worst performers (lower is better, so worst are at the end)
+          this.genes.sort((a, b) => a.fitness - b.fitness);
+
+        const popSizeBefore = this.genes.length;
+        const bestFitnessBefore = this.genes[0].fitness;
+        const worstFitnessBefore = this.genes[this.genes.length - 1].fitness;
 
         // Replace worst quarter with fresh random genes
         const quarterSize = Math.floor(this.genes.length / 4);
         const numToReplace = Math.max(1, quarterSize); // At least 1
+
+        console.log(`   Population before: ${popSizeBefore} genes`);
+        console.log(`   Fitness range: ${bestFitnessBefore.toFixed(2)} (best) to ${worstFitnessBefore.toFixed(2)} (worst)`);
+        console.log(`   Removing ${numToReplace} worst genes (${((numToReplace / this.genes.length) * 100).toFixed(1)}%)`);
 
         // Keep the best 75%
         this.genes = this.genes.slice(0, this.genes.length - numToReplace);
@@ -181,11 +208,30 @@ export class GeneCollection {
         minY += margin;
         maxY -= margin;
 
-        // Generate fresh random genes with COMPLETELY RANDOM positions
+        // PREPARE INCUBATION CONFIG
+        // Create a "Hyper-Active" config for the warm-up phase to force topological untangling
+        const incubationConfig: SpringConfig = {
+          ...this.config,
+          // Force topological tools ON with aggressive parameters
+          useSwapMutation: true,
+          swapMutationRate: 0.5,           // Very high swap rate to untangle crossed rooms
+          usePartnerBias: true,
+          partnerBiasRate: 0.8,            // Very high attraction to connected neighbors
+          useCenterGravity: true,
+          centerGravityRate: 0.5,          // High rate to prevent flying off map
+          centerGravityStrength: 0.1,      // Strong pull toward center
+        };
+
+        // Generate fresh genes and run INCUBATION PHASE
+        const freshGenesFitnesses: number[] = [];
+
         for (let i = 0; i < numToReplace; i++) {
           const freshGene = templateGene.clone();
 
-          // GLOBAL EXPLORATION: Scramble all positions randomly within boundary
+          // Log inherited fitness (should be best gene's fitness - THIS IS THE BUG WE FIXED)
+          const inheritedFitness = freshGene.fitness;
+
+          // 1. HARD RESET: Scramble all positions randomly within boundary
           // This simulates "refreshing the page" - completely new starting configuration
           for (const room of freshGene.rooms) {
             // Random position within boundary
@@ -195,15 +241,71 @@ export class GeneCollection {
             // Reset dimensions to initial target values (removes any "squished" bias)
             room.width = Math.sqrt(room.targetArea * room.targetRatio);
             room.height = room.targetArea / room.width;
+
+            // Reset accumulated pressure history to prevent momentum carryover
+            room.accumulatedPressureX = 0;
+            room.accumulatedPressureY = 0;
           }
 
-          // FEATURE: Apply warm-up iterations to untangle the random chaos
-          // This allows fresh genes to settle into valid positions before competing
-          for (let j = 0; j < warmUp; j++) {
-            freshGene.applySquishCollisions(this.boundary, this.config, this.globalTargetRatio);
+          // 2. INCUBATION PHASE: The "Mini-Evolution" / "Boot Camp"
+          // Run a private, accelerated evolution loop to untangle topology before
+          // this gene joins the main population. This prevents "survival of the luckiest"
+          // by allowing the fresh gene to organize itself first.
+          const warmUpSteps = this.config.freshBloodWarmUp || 100;
+
+          for (let j = 0; j < warmUpSteps; j++) {
+            // Step A: AGGRESSIVE MUTATION (The "Pull")
+            // Force topological untangling through swaps, partner attraction, and centering
+            freshGene.mutate(
+              0.9,                                    // 90% chance to mutate (very high activity)
+              this.config.mutationStrength * 3.0,    // Violent movement allowed for rapid organization
+              1.0,                                    // 100% aspect ratio adaptation for shape flexibility
+              this.globalTargetRatio,
+              incubationConfig,                       // Use hyper-active config
+              this.adjacencies
+            );
+
+            // Step B: PHYSICS RESOLUTION (The "Push")
+            // Resolve overlaps and boundary violations created by aggressive mutation
+            freshGene.applySquishCollisions(this.boundary, incubationConfig, this.globalTargetRatio);
+          }
+
+          // 3. GRADUATION
+          // The gene is now "incubated" and ready to join the main population
+          // Final collision pass to ensure valid state
+          freshGene.applySquishCollisions(this.boundary, this.config, this.globalTargetRatio);
+
+          // CRITICAL: Calculate fitness so the gene can compete fairly
+          // Without this, fresh genes inherit the best fitness from templateGene.clone()
+          // which breaks selection pressure (random genes masquerading as elite)
+          freshGene.calculateFitness(
+            this.boundary,
+            this.adjacencies,
+            this.config.fitnessBalance,
+            this.config
+          );
+
+          freshGenesFitnesses.push(freshGene.fitness);
+
+          if (i === 0) {
+            // Log first fresh gene details
+            console.log(`   Fresh Gene #1: inherited=${inheritedFitness.toFixed(2)} → calculated=${freshGene.fitness.toFixed(2)} (G=${freshGene.fitnessG.toFixed(2)}, T=${freshGene.fitnessT.toFixed(2)})`);
           }
 
           this.genes.push(freshGene);
+        }
+
+        const popSizeAfter = this.genes.length;
+        const avgFreshFitness = freshGenesFitnesses.reduce((a, b) => a + b, 0) / freshGenesFitnesses.length;
+        const minFreshFitness = Math.min(...freshGenesFitnesses);
+        const maxFreshFitness = Math.max(...freshGenesFitnesses);
+
+        console.log(`   Created ${numToReplace} fresh genes with avg fitness: ${avgFreshFitness.toFixed(2)} (range: ${minFreshFitness.toFixed(2)} - ${maxFreshFitness.toFixed(2)})`);
+        console.log(`   Population after: ${popSizeAfter} genes`);
+        console.log(`   ✓ Fresh blood injection complete\n`);
+        } catch (error) {
+          console.error(`❌ [Gen ${this.currentGeneration}] Fresh Blood Injection FAILED:`, error);
+          throw error; // Re-throw to ensure we don't silently fail
         }
       }
     }
