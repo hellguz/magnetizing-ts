@@ -49,6 +49,8 @@ interface SpringVisualizationArgs {
   useFreshBlood: boolean;
   freshBloodInterval: number;
   freshBloodWarmUp: number;
+  useNonLinearOverlapPenalty: boolean;
+  overlapPenaltyExponent: number;
 }
 
 const springTemplates: Record<TemplateType, SpringTemplate> = {
@@ -679,10 +681,12 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useFreshBlood: args.useFreshBlood,
       freshBloodInterval: args.freshBloodInterval,
       freshBloodWarmUp: args.freshBloodWarmUp,
+      useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
+      overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle boundary changes from editor
   const handleBoundaryChange = useCallback((newPoints: Vec2[]) => {
@@ -719,7 +723,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle reset generation
   const handleReset = useCallback(() => {
@@ -755,10 +759,12 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useFreshBlood: args.useFreshBlood,
       freshBloodInterval: args.freshBloodInterval,
       freshBloodWarmUp: args.freshBloodWarmUp,
+      useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
+      overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Animation loop controlled by autoPlay prop
   React.useEffect(() => {
@@ -972,6 +978,14 @@ const meta: Meta<SpringVisualizationArgs> = {
       control: { type: 'range', min: 0, max: 100, step: 5 },
       description: 'Number of physics warm-up iterations for fresh genes (only if useFreshBlood is enabled)',
     },
+    useNonLinearOverlapPenalty: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Non-Linear Overlap Penalty: Punish large/blocky overlaps exponentially more than thin slivers',
+    },
+    overlapPenaltyExponent: {
+      control: { type: 'range', min: 1.0, max: 5.0, step: 0.1 },
+      description: 'Exponent for overlap penalty (1.0 = linear, 1.5 = default, 2.0 = quadratic, 3.0 = cubic). Only if useNonLinearOverlapPenalty is enabled',
+    },
   },
   parameters: {
     layout: 'fullscreen',
@@ -1016,5 +1030,7 @@ export const Default: Story = {
     useFreshBlood: false,
     freshBloodInterval: 20,
     freshBloodWarmUp: 30,
+    useNonLinearOverlapPenalty: false,
+    overlapPenaltyExponent: 1.5,
   },
 };

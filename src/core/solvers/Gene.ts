@@ -379,7 +379,7 @@ export class Gene {
    * FitnessT: Sum of distances between connected rooms
    */
   calculateFitness(boundary: Vec2[], adjacencies: Adjacency[], balance: number, config: SpringConfig): void {
-    this.fitnessG = this.calculateGeometricFitness(boundary);
+    this.fitnessG = this.calculateGeometricFitness(boundary, config);
     this.fitnessT = this.calculateTopologicalFitness(adjacencies, config);
 
     // FIX: Use direct summation. Lower fitness is better.
@@ -390,8 +390,9 @@ export class Gene {
 
   /**
    * FitnessG: Calculate total overlap area + area outside boundary
+   * Enhanced with non-linear penalties for large/blocky overlaps
    */
-  private calculateGeometricFitness(boundary: Vec2[]): number {
+  private calculateGeometricFitness(boundary: Vec2[], config: SpringConfig): number {
     let totalOverlap = 0;
     let totalOutOfBounds = 0;
 
@@ -407,7 +408,40 @@ export class Gene {
         const polyB = Polygon.createRectangle(roomB.x, roomB.y, roomB.width, roomB.height);
 
         const overlapArea = Polygon.intersectionArea(polyA, polyB);
-        totalOverlap += overlapArea;
+
+        if (overlapArea > 0.01) { // Ignore tiny numerical errors
+          // FEATURE: Non-linear overlap penalty
+          // Larger overlaps are punished exponentially more than small ones
+          // Thin slivers are automatically less penalized due to smaller area
+          let penalty = overlapArea;
+
+          if (config.useNonLinearOverlapPenalty) {
+            const exponent = config.overlapPenaltyExponent ?? 1.5;
+
+            // Calculate AABB overlap dimensions to detect thin slivers
+            const aabbA = Polygon.calculateAABB(polyA);
+            const aabbB = Polygon.calculateAABB(polyB);
+
+            const overlapX = Math.min(aabbA.maxX, aabbB.maxX) - Math.max(aabbA.minX, aabbB.minX);
+            const overlapY = Math.min(aabbA.maxY, aabbB.maxY) - Math.max(aabbA.minY, aabbB.minY);
+            const aabbOverlapArea = overlapX * overlapY;
+
+            // Calculate "compactness" - how much of the AABB is actually overlapping
+            // Thin slivers have low compactness (overlapArea << aabbOverlapArea)
+            // Blocky overlaps have high compactness (overlapArea ≈ aabbOverlapArea)
+            const compactness = aabbOverlapArea > 0.1 ? overlapArea / aabbOverlapArea : 1.0;
+
+            // Apply exponential penalty, scaled by compactness
+            // Thin slivers (low compactness) get reduced penalty
+            // Blocky overlaps (high compactness) get full exponential penalty
+            const basePenalty = Math.pow(overlapArea, exponent);
+            const compactnessBonus = 1.0 + compactness; // 1.0 (thin) to 2.0 (blocky)
+
+            penalty = basePenalty * compactnessBonus;
+          }
+
+          totalOverlap += penalty;
+        }
       }
     }
 
