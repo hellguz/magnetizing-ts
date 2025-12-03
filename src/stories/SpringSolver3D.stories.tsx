@@ -220,19 +220,19 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
       // Duschbad ~5m²
       { id: 'bath-2', x: 20, y: 230, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 1.0 },
       // Flur ~13m²
-      { id: 'entry', x: 120, y: 130, width: 150, height: 80, vx: 0, vy: 0, targetRatio: 3.0 },
+      { id: 'corridor-1', x: 120, y: 130, width: 150, height: 80, vx: 0, vy: 0, targetRatio: 3.0 },
       // Balkon ~5m²
       { id: 'balcony', x: 300, y: 380, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 2.0 },
     ],
     adjacencies: [
-      { a: 'entry', b: 'living', weight: 3.0 },
-      { a: 'entry', b: 'bedroom-1', weight: 3.0 },
-      { a: 'entry', b: 'bedroom-2', weight: 3.0 },
-      { a: 'entry', b: 'bedroom-3', weight: 3.0 },
-      { a: 'entry', b: 'bedroom-4', weight: 3.0 },
-      { a: 'entry', b: 'bath-1', weight: 2.5 },
-      { a: 'entry', b: 'bath-2', weight: 2.5 },
-      { a: 'living', b: 'balcony', weight: 2.0 },
+      { a: 'corridor-1', b: 'living', weight: 30.0 },
+      { a: 'corridor-1', b: 'bedroom-1', weight: 30.0 },
+      { a: 'corridor-1', b: 'bedroom-2', weight: 30.0 },
+      { a: 'corridor-1', b: 'bedroom-3', weight: 30.0 },
+      { a: 'corridor-1', b: 'bedroom-4', weight: 30.0 },
+      { a: 'corridor-1', b: 'bath-1', weight: 25.0 },
+      { a: 'corridor-1', b: 'bath-2', weight: 25.0 },
+      { a: 'living', b: 'balcony', weight: 20.0 },
     ],
   },
 
@@ -1159,10 +1159,10 @@ export const Default: Story = {
   args: {
     template: 'howoge-3-room', // Default to 3-room apartment
     populationSize: 25,
-    mutationRate: 0.5,
-    mutationStrength: 30,
+    mutationRate: 0.6,
+    mutationStrength: 25,
     selectionPressure: 0.5,
-    fitnessBalance: 0.3,
+    fitnessBalance: 0.5,
     aspectRatioMutationRate: 0.3,
     boundaryScale: 1.0,
     globalTargetRatio: 2,
