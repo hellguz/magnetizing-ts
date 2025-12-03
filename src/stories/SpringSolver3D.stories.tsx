@@ -8,7 +8,21 @@ import { SpringSolver } from '../core/solvers/SpringSolver.js';
 import { RoomState, Adjacency } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
 
-type TemplateType = 'small-apartment' | 'office-suite' | 'house' | 'large-house' | 'gallery' | 'clinic' | 'restaurant' | 'palace' | 'hotel';
+type TemplateType = 
+  | 'small-apartment' 
+  | 'office-suite' 
+  | 'house' 
+  | 'large-house' 
+  | 'gallery' 
+  | 'clinic' 
+  | 'restaurant' 
+  | 'palace' 
+  | 'hotel'
+  | 'howoge-1-room'
+  | 'howoge-2-room'
+  | 'howoge-3-room'
+  | 'howoge-4-room'
+  | 'howoge-5-room';
 
 interface SpringTemplate {
   boundary: Vec2[];
@@ -42,7 +56,187 @@ interface SpringVisualizationArgs {
   overlapPenaltyExponent: number;
 }
 
+// 1m = ~30 units for scale consistency
+const m2 = (area: number) => area * 900; 
+
 const springTemplates: Record<TemplateType, SpringTemplate> = {
+  // --- HOWOGE TYPOLOGIES (Based on PDF V.2.0) ---
+  
+  'howoge-1-room': {
+    // Page 18/30 - Approx 33m²
+    boundary: [
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+      { x: 200, y: 220 },
+      { x: 0, y: 220 },
+    ],
+    rooms: [
+      // Wohnküche ~22m²
+      { id: 'living', x: 20, y: 20, width: 150, height: 130, vx: 0, vy: 0, targetRatio: 1.2 }, 
+      // Duschbad ~5m²
+      { id: 'bath-1', x: 20, y: 160, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 1.0 },
+      // Flur ~3m² (Mapped to entry for color)
+      { id: 'entry', x: 100, y: 160, width: 60, height: 50, vx: 0, vy: 0, targetRatio: 1.5 },
+      // Balkon ~3m²
+      { id: 'balcony', x: 160, y: 50, width: 60, height: 50, vx: 0, vy: 0, targetRatio: 2.0 },
+    ],
+    adjacencies: [
+      { a: 'entry', b: 'living', weight: 3.0 },
+      { a: 'entry', b: 'bath-1', weight: 2.5 },
+      { a: 'living', b: 'balcony', weight: 2.0 },
+    ],
+  },
+
+  'howoge-2-room': {
+    // Page 20/34 - Approx 50m²
+    boundary: [
+      { x: 0, y: 0 },
+      { x: 280, y: 0 },
+      { x: 280, y: 250 },
+      { x: 0, y: 250 },
+    ],
+    rooms: [
+      // Wohnküche ~23m²
+      { id: 'living', x: 20, y: 20, width: 160, height: 130, vx: 0, vy: 0, targetRatio: 1.3 },
+      // Schlafzimmer ~14m²
+      { id: 'bedroom-1', x: 20, y: 160, width: 120, height: 105, vx: 0, vy: 0, targetRatio: 1.2 },
+      // Bad ~6m²
+      { id: 'bath-1', x: 200, y: 20, width: 75, height: 75, vx: 0, vy: 0, targetRatio: 1.0 },
+      // Flur ~4m²
+      { id: 'entry', x: 160, y: 160, width: 80, height: 50, vx: 0, vy: 0, targetRatio: 3.0 },
+      // Abstell ~1.5m²
+      { id: 'storage-1', x: 200, y: 100, width: 40, height: 35, vx: 0, vy: 0, targetRatio: 1.0 },
+      // Balkon ~4m²
+      { id: 'balcony', x: 250, y: 150, width: 60, height: 60, vx: 0, vy: 0, targetRatio: 1.5 },
+    ],
+    adjacencies: [
+      { a: 'entry', b: 'living', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-1', weight: 3.0 },
+      { a: 'entry', b: 'bath-1', weight: 2.5 },
+      { a: 'entry', b: 'storage-1', weight: 2.0 },
+      { a: 'living', b: 'balcony', weight: 2.0 },
+    ],
+  },
+
+  'howoge-3-room': {
+    // Page 21/36 - Approx 70m² - L-Shape Boundary simulation
+    boundary: [
+      { x: 0, y: 0 },
+      { x: 350, y: 0 },
+      { x: 350, y: 200 },
+      { x: 200, y: 200 }, // Inner corner
+      { x: 200, y: 350 },
+      { x: 0, y: 350 },
+    ],
+    rooms: [
+      // Wohnküche ~27m²
+      { id: 'living', x: 20, y: 20, width: 170, height: 145, vx: 0, vy: 0, targetRatio: 1.4 },
+      // Schlafzimmer ~14m²
+      { id: 'bedroom-1', x: 20, y: 200, width: 120, height: 105, vx: 0, vy: 0, targetRatio: 1.2 },
+      // 3. Zimmer ~12m²
+      { id: 'bedroom-2', x: 220, y: 20, width: 110, height: 100, vx: 0, vy: 0, targetRatio: 1.1 },
+      // Wannenbad ~7m²
+      { id: 'bath-1', x: 150, y: 200, width: 85, height: 75, vx: 0, vy: 0, targetRatio: 1.2 },
+      // Flur ~7m²
+      { id: 'entry', x: 150, y: 150, width: 100, height: 65, vx: 0, vy: 0, targetRatio: 3.0 },
+      // Abstell ~1.5m²
+      { id: 'storage-1', x: 200, y: 120, width: 40, height: 35, vx: 0, vy: 0, targetRatio: 1.0 },
+      // Balkon ~5m²
+      { id: 'balcony', x: 20, y: 150, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 1.5 },
+    ],
+    adjacencies: [
+      { a: 'entry', b: 'living', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-1', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-2', weight: 3.0 },
+      { a: 'entry', b: 'bath-1', weight: 2.5 },
+      { a: 'entry', b: 'storage-1', weight: 2.0 },
+      { a: 'living', b: 'balcony', weight: 2.0 },
+    ],
+  },
+
+  'howoge-4-room': {
+    // Page 22/38 - Approx 90m²
+    boundary: [
+      { x: 0, y: 0 },
+      { x: 300, y: 0 },
+      { x: 300, y: 450 },
+      { x: 0, y: 450 },
+    ],
+    rooms: [
+      // Wohnküche ~27m²
+      { id: 'living', x: 20, y: 300, width: 170, height: 145, vx: 0, vy: 0, targetRatio: 1.4 },
+      // Schlafzimmer ~14m²
+      { id: 'bedroom-1', x: 20, y: 20, width: 120, height: 105, vx: 0, vy: 0, targetRatio: 1.2 },
+      // 3. Zimmer ~11m²
+      { id: 'bedroom-2', x: 160, y: 20, width: 105, height: 95, vx: 0, vy: 0, targetRatio: 1.1 },
+      // 4. Zimmer ~11m²
+      { id: 'bedroom-3', x: 180, y: 300, width: 105, height: 95, vx: 0, vy: 0, targetRatio: 1.1 },
+      // Wannenbad ~7m²
+      { id: 'bath-1', x: 20, y: 150, width: 85, height: 75, vx: 0, vy: 0, targetRatio: 1.2 },
+      // Duschbad ~5m²
+      { id: 'bath-2', x: 180, y: 200, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 1.0 },
+      // Flur ~11m² (Central spine)
+      { id: 'entry', x: 120, y: 150, width: 50, height: 200, vx: 0, vy: 0, targetRatio: 4.0 },
+      // Abstell ~1.5m²
+      { id: 'storage-1', x: 180, y: 150, width: 40, height: 35, vx: 0, vy: 0, targetRatio: 1.0 },
+      // Balkon ~5m²
+      { id: 'balcony', x: 50, y: 430, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 2.0 },
+    ],
+    adjacencies: [
+      { a: 'entry', b: 'living', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-1', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-2', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-3', weight: 3.0 },
+      { a: 'entry', b: 'bath-1', weight: 2.5 },
+      { a: 'entry', b: 'bath-2', weight: 2.5 },
+      { a: 'entry', b: 'storage-1', weight: 2.0 },
+      { a: 'living', b: 'balcony', weight: 2.0 },
+    ],
+  },
+
+  'howoge-5-room': {
+    // Page 23/40 - Approx 100m² - U-Shape hint from page 23 layout
+    boundary: [
+      { x: 0, y: 0 },
+      { x: 400, y: 0 },
+      { x: 400, y: 400 },
+      { x: 200, y: 400 },
+      { x: 200, y: 300 }, // Indent
+      { x: 0, y: 300 },
+    ],
+    rooms: [
+      // Wohnküche ~32m²
+      { id: 'living', x: 220, y: 250, width: 180, height: 160, vx: 0, vy: 0, targetRatio: 1.3 },
+      // Schlafzimmer ~15m²
+      { id: 'bedroom-1', x: 20, y: 20, width: 125, height: 110, vx: 0, vy: 0, targetRatio: 1.2 },
+      // 3. Zimmer ~12m²
+      { id: 'bedroom-2', x: 160, y: 20, width: 110, height: 100, vx: 0, vy: 0, targetRatio: 1.1 },
+      // 4. Zimmer ~11m²
+      { id: 'bedroom-3', x: 280, y: 20, width: 105, height: 95, vx: 0, vy: 0, targetRatio: 1.1 },
+      // 5. Zimmer ~11m²
+      { id: 'bedroom-4', x: 280, y: 130, width: 105, height: 95, vx: 0, vy: 0, targetRatio: 1.1 },
+      // Wannenbad ~7m²
+      { id: 'bath-1', x: 20, y: 150, width: 85, height: 75, vx: 0, vy: 0, targetRatio: 1.2 },
+      // Duschbad ~5m²
+      { id: 'bath-2', x: 20, y: 230, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 1.0 },
+      // Flur ~13m²
+      { id: 'entry', x: 120, y: 130, width: 150, height: 80, vx: 0, vy: 0, targetRatio: 3.0 },
+      // Balkon ~5m²
+      { id: 'balcony', x: 300, y: 380, width: 70, height: 65, vx: 0, vy: 0, targetRatio: 2.0 },
+    ],
+    adjacencies: [
+      { a: 'entry', b: 'living', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-1', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-2', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-3', weight: 3.0 },
+      { a: 'entry', b: 'bedroom-4', weight: 3.0 },
+      { a: 'entry', b: 'bath-1', weight: 2.5 },
+      { a: 'entry', b: 'bath-2', weight: 2.5 },
+      { a: 'living', b: 'balcony', weight: 2.0 },
+    ],
+  },
+
+  // --- EXISTING TEMPLATES ---
   'small-apartment': {
     boundary: [
       { x: 50, y: 50 },
@@ -583,6 +777,8 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
   const initialCameraTargetRef = useRef<[number, number, number]>([0, 0, 0]);
   // Trigger re-renders for info display (statsUpdate not read directly, just used as dependency)
   const [, setStatsUpdate] = useState(0);
+  // Track solver version to restart animation loop when solver is recreated
+  const [solverVersion, setSolverVersion] = useState(0);
 
   // Helper: Calculate centroid of a polygon
   const calculateCentroid = useCallback((points: Vec2[]) => {
@@ -623,6 +819,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
 
     // Apply boundary scaling towards centroid (area-based scale + manual scale)
     const centroid = calculateCentroid(templateBoundary);
+    
     const combinedScale = areaScale * args.boundaryScale;
     const boundary = templateBoundary.map(p => ({
       x: centroid.x + (p.x - centroid.x) * combinedScale,
@@ -670,6 +867,9 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
       overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
+
+    // Increment version to signal solver reset and restart animation loop
+    setSolverVersion(v => v + 1);
   }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle boundary changes from editor
@@ -707,6 +907,9 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
       overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
+
+    // Increment version to signal solver reset and restart animation loop
+    setSolverVersion(v => v + 1);
   }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle reset generation
@@ -742,6 +945,9 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
       overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
+
+    // Increment version to signal solver reset and restart animation loop
+    setSolverVersion(v => v + 1);
   }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Animation loop controlled by autoPlay prop
@@ -776,7 +982,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
         animationIdRef.current = null;
       }
     };
-  }, [args.autoPlay]);
+  }, [args.autoPlay, solverVersion]);
 
   const adjacencies = springTemplates[args.template].adjacencies;
 
@@ -839,7 +1045,22 @@ const meta: Meta<SpringVisualizationArgs> = {
   argTypes: {
     template: {
       control: { type: 'select' },
-      options: ['small-apartment', 'office-suite', 'house', 'large-house', 'gallery', 'clinic', 'restaurant', 'palace', 'hotel'],
+      options: [
+        'small-apartment', 
+        'office-suite', 
+        'house', 
+        'large-house', 
+        'gallery', 
+        'clinic', 
+        'restaurant', 
+        'palace', 
+        'hotel',
+        'howoge-1-room',
+        'howoge-2-room',
+        'howoge-3-room',
+        'howoge-4-room',
+        'howoge-5-room'
+      ],
       description: 'Room configuration template',
     },
     populationSize: {
@@ -936,7 +1157,7 @@ type Story = StoryObj<SpringVisualizationArgs>;
 
 export const Default: Story = {
   args: {
-    template: 'house',
+    template: 'howoge-3-room', // Default to 3-room apartment
     populationSize: 25,
     mutationRate: 0.5,
     mutationStrength: 30,
@@ -949,7 +1170,7 @@ export const Default: Story = {
 
     // Advanced Optimization Features
     useSwapMutation: true,
-    swapMutationRate: 0.8,
+    swapMutationRate: 0.3,
     useAggressiveInflation: false,
     inflationRate: 1.02,
     inflationThreshold: 1.05,
