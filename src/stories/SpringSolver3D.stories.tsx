@@ -2998,9 +2998,9 @@ const meta: Meta<SpringVisualizationArgs> = {
         "Max overgrowth (e.g., 1.05 = 5% larger than target, only if useAggressiveInflation is enabled)",
     },
     warmUpIterations: {
-      control: { type: "range", min: 0, max: 50, step: 1 },
+      control: { type: "range", min: 0, max: 5, step: 1 },
       description:
-        '[OPTIMIZATION] Physics Warm-Up: Number of physics iterations to run immediately after mutation (prevents "death of potential geniuses")',
+        '[OPTIMIZATION] Physics Warm-Up: Number of physics iterations to run immediately after mutation (prevents "death of potential geniuses"). Capped at 5 to prevent freezing.',
     },
     useFreshBlood: {
       control: { type: "boolean" },
@@ -3013,9 +3013,9 @@ const meta: Meta<SpringVisualizationArgs> = {
         "Every N iterations, inject fresh blood (only if useFreshBlood is enabled)",
     },
     freshBloodWarmUp: {
-      control: { type: "range", min: 0, max: 100, step: 5 },
+      control: { type: "range", min: 0, max: 20, step: 1 },
       description:
-        "Number of physics warm-up iterations for fresh genes (only if useFreshBlood is enabled)",
+        "Number of physics warm-up iterations for fresh genes (only if useFreshBlood is enabled). Capped at 20 to prevent freezing.",
     },
     useNonLinearOverlapPenalty: {
       control: { type: "boolean" },
@@ -3056,10 +3056,10 @@ export const Default: Story = {
     useAggressiveInflation: false,
     inflationRate: 1.02,
     inflationThreshold: 1.05,
-    warmUpIterations: 5,
+    warmUpIterations: 3,
     useFreshBlood: true,
     freshBloodInterval: 50,
-    freshBloodWarmUp: 100,
+    freshBloodWarmUp: 3,
     useNonLinearOverlapPenalty: true,
     overlapPenaltyExponent: 1.5,
   },
