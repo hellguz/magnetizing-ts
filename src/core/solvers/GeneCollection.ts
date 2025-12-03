@@ -54,15 +54,8 @@ export class GeneCollection {
    * 4. Perform crossover
    * 5. Mutate offspring
    * 6. Cull worst performers
-   *
-   * FEATURE: Simulated Annealing - decay mutation strength over generations
    */
   iterate(): void {
-    // FEATURE: Simulated Annealing - calculate annealed mutation strength
-    const progress = this.currentGeneration / this.config.maxGenerations;
-    const annealedMutationStrength = this.config.useSimulatedAnnealing
-      ? this.config.mutationStrength * (1.0 - progress)
-      : this.config.mutationStrength;
 
     // Step 1: Apply collision resolution to all genes
     for (const gene of this.genes) {
@@ -94,11 +87,11 @@ export class GeneCollection {
       offspring.push(child);
     }
 
-    // Step 5: Mutate offspring (with annealed mutation strength)
+    // Step 5: Mutate offspring
     for (const child of offspring) {
       child.mutate(
         this.config.mutationRate,
-        annealedMutationStrength,
+        this.config.mutationStrength,
         this.config.aspectRatioMutationRate,
         this.globalTargetRatio,
         this.config,
@@ -126,7 +119,7 @@ export class GeneCollection {
       const clone = randomGene.clone();
       clone.mutate(
         this.config.mutationRate,
-        annealedMutationStrength,
+        this.config.mutationStrength,
         this.config.aspectRatioMutationRate,
         this.globalTargetRatio,
         this.config,
@@ -190,9 +183,6 @@ export class GeneCollection {
           swapMutationRate: 0.5,           // Very high swap rate to untangle crossed rooms
           usePartnerBias: true,
           partnerBiasRate: 0.8,            // Very high attraction to connected neighbors
-          useCenterGravity: true,
-          centerGravityRate: 0.5,          // High rate to prevent flying off map
-          centerGravityStrength: 0.1,      // Strong pull toward center
         };
 
         // Generate fresh genes and run INCUBATION PHASE
@@ -254,7 +244,6 @@ export class GeneCollection {
           );
 
           this.genes.push(freshGene);
-          console.log(`[Fresh Blood] Gen ${this.currentGeneration}: Added fresh gene ${i + 1}/${numToReplace} with fitness ${freshGene.fitness.toFixed(4)}`);
         }
         console.log(`[Fresh Blood] Gen ${this.currentGeneration}: Injected ${numToReplace} fresh genes into main pool (replaced worst performers)`);
       }

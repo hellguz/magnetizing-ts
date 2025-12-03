@@ -21,27 +21,16 @@ interface SpringVisualizationArgs {
   populationSize: number;
   mutationRate: number;
   mutationStrength: number;
-  crossoverRate: number;
   selectionPressure: number;
   fitnessBalance: number;
   aspectRatioMutationRate: number;
   boundaryScale: number;
   globalTargetRatio: number | undefined;
   autoPlay: boolean;
-  showAdjacencies: boolean;
-  showBoundary: boolean;
-  editBoundary: boolean;
 
   // Advanced optimization features
-  useQuadraticPenalty: boolean;
-  useSimulatedAnnealing: boolean;
   useSwapMutation: boolean;
   swapMutationRate: number;
-  usePartnerBias: boolean;
-  partnerBiasRate: number;
-  useCenterGravity: boolean;
-  centerGravityRate: number;
-  centerGravityStrength: number;
   useAggressiveInflation: boolean;
   inflationRate: number;
   inflationThreshold: number;
@@ -661,19 +650,15 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       maxGenerations: 1000,
       mutationRate: args.mutationRate,
       mutationStrength: args.mutationStrength,
-      crossoverRate: args.crossoverRate,
+      crossoverRate: 0.5,
       selectionPressure: args.selectionPressure,
       fitnessBalance: args.fitnessBalance,
       aspectRatioMutationRate: args.aspectRatioMutationRate,
-      useQuadraticPenalty: args.useQuadraticPenalty,
-      useSimulatedAnnealing: args.useSimulatedAnnealing,
+      useQuadraticPenalty: true,
+      usePartnerBias: true,
+      partnerBiasRate: 0.4,
       useSwapMutation: args.useSwapMutation,
       swapMutationRate: args.swapMutationRate,
-      usePartnerBias: args.usePartnerBias,
-      partnerBiasRate: args.partnerBiasRate,
-      useCenterGravity: args.useCenterGravity,
-      centerGravityRate: args.centerGravityRate,
-      centerGravityStrength: args.centerGravityStrength,
       useAggressiveInflation: args.useAggressiveInflation,
       inflationRate: args.inflationRate,
       inflationThreshold: args.inflationThreshold,
@@ -686,7 +671,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle boundary changes from editor
   const handleBoundaryChange = useCallback((newPoints: Vec2[]) => {
@@ -704,19 +689,15 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       maxGenerations: 1000,
       mutationRate: args.mutationRate,
       mutationStrength: args.mutationStrength,
-      crossoverRate: args.crossoverRate,
+      crossoverRate: 0.5,
       selectionPressure: args.selectionPressure,
       fitnessBalance: args.fitnessBalance,
       aspectRatioMutationRate: args.aspectRatioMutationRate,
-      useQuadraticPenalty: args.useQuadraticPenalty,
-      useSimulatedAnnealing: args.useSimulatedAnnealing,
+      useQuadraticPenalty: true,
+      usePartnerBias: true,
+      partnerBiasRate: 0.4,
       useSwapMutation: args.useSwapMutation,
       swapMutationRate: args.swapMutationRate,
-      usePartnerBias: args.usePartnerBias,
-      partnerBiasRate: args.partnerBiasRate,
-      useCenterGravity: args.useCenterGravity,
-      centerGravityRate: args.centerGravityRate,
-      centerGravityStrength: args.centerGravityStrength,
       useAggressiveInflation: args.useAggressiveInflation,
       inflationRate: args.inflationRate,
       inflationThreshold: args.inflationThreshold,
@@ -729,7 +710,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle reset generation
   const handleReset = useCallback(() => {
@@ -745,19 +726,15 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       maxGenerations: 1000,
       mutationRate: args.mutationRate,
       mutationStrength: args.mutationStrength,
-      crossoverRate: args.crossoverRate,
+      crossoverRate: 0.5,
       selectionPressure: args.selectionPressure,
       fitnessBalance: args.fitnessBalance,
       aspectRatioMutationRate: args.aspectRatioMutationRate,
-      useQuadraticPenalty: args.useQuadraticPenalty,
-      useSimulatedAnnealing: args.useSimulatedAnnealing,
+      useQuadraticPenalty: true,
+      usePartnerBias: true,
+      partnerBiasRate: 0.4,
       useSwapMutation: args.useSwapMutation,
       swapMutationRate: args.swapMutationRate,
-      usePartnerBias: args.usePartnerBias,
-      partnerBiasRate: args.partnerBiasRate,
-      useCenterGravity: args.useCenterGravity,
-      centerGravityRate: args.centerGravityRate,
-      centerGravityStrength: args.centerGravityStrength,
       useAggressiveInflation: args.useAggressiveInflation,
       inflationRate: args.inflationRate,
       inflationThreshold: args.inflationThreshold,
@@ -770,7 +747,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Animation loop controlled by autoPlay prop
   React.useEffect(() => {
@@ -810,16 +787,14 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
             rooms={rooms}
             adjacencies={adjacencies}
             boundary={scaledBoundaryRef.current}
-            showAdjacencies={args.showAdjacencies}
-            showBoundary={!args.editBoundary && args.showBoundary}
+            showAdjacencies={true}
+            showBoundary={true}
           />
-          {args.editBoundary && (
-            <BoundaryEditor
-              points={editableBoundary}
-              onChange={handleBoundaryChange}
-              editable={true}
-            />
-          )}
+          <BoundaryEditor
+            points={editableBoundary}
+            onChange={handleBoundaryChange}
+            editable={true}
+          />
         </SceneContainer>
       </Canvas>
 
@@ -878,10 +853,6 @@ const meta: Meta<SpringVisualizationArgs> = {
       control: { type: 'range', min: 1, max: 50, step: 1 },
       description: 'Magnitude of position/dimension changes',
     },
-    crossoverRate: {
-      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
-      description: 'Rate of offspring generation',
-    },
     selectionPressure: {
       control: { type: 'range', min: 0.1, max: 1, step: 0.05 },
       description: 'Percentage of population to cull',
@@ -906,28 +877,8 @@ const meta: Meta<SpringVisualizationArgs> = {
       control: { type: 'boolean' },
       description: 'Automatically run the solver animation',
     },
-    showAdjacencies: {
-      control: { type: 'boolean' },
-      description: 'Show adjacency connections between rooms',
-    },
-    showBoundary: {
-      control: { type: 'boolean' },
-      description: 'Show boundary (red dashed line)',
-    },
-    editBoundary: {
-      control: { type: 'boolean' },
-      description: 'Enable interactive boundary editing (drag vertices, click midpoints to add)',
-    },
 
     // Advanced Optimization Features
-    useQuadraticPenalty: {
-      control: { type: 'boolean' },
-      description: '[OPTIMIZATION] Quadratic Penalty: Use distance^2 for topological fitness (exponentially penalizes stretched connections)',
-    },
-    useSimulatedAnnealing: {
-      control: { type: 'boolean' },
-      description: '[OPTIMIZATION] Simulated Annealing: Decay mutation strength over generations (prevents local minima)',
-    },
     useSwapMutation: {
       control: { type: 'boolean' },
       description: '[OPTIMIZATION] Swap Mutation: Randomly swap room positions to untangle topology',
@@ -935,26 +886,6 @@ const meta: Meta<SpringVisualizationArgs> = {
     swapMutationRate: {
       control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
       description: 'Probability of swap mutation (only if useSwapMutation is enabled)',
-    },
-    usePartnerBias: {
-      control: { type: 'boolean' },
-      description: '[OPTIMIZATION] Partner Bias: Bias mutations toward connected neighbors (guides adjacency)',
-    },
-    partnerBiasRate: {
-      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
-      description: 'Probability of biased mutation toward partner (only if usePartnerBias is enabled)',
-    },
-    useCenterGravity: {
-      control: { type: 'boolean' },
-      description: '[OPTIMIZATION] Center Gravity: Pull rooms toward centroid (prevents explosion)',
-    },
-    centerGravityRate: {
-      control: { type: 'range', min: 0.0, max: 1.0, step: 0.05 },
-      description: 'Probability of center gravity pull (only if useCenterGravity is enabled)',
-    },
-    centerGravityStrength: {
-      control: { type: 'range', min: 0.0, max: 0.2, step: 0.01 },
-      description: 'Strength of center gravity pull (only if useCenterGravity is enabled)',
     },
     useAggressiveInflation: {
       control: { type: 'boolean' },
@@ -1008,34 +939,23 @@ export const Default: Story = {
     populationSize: 25,
     mutationRate: 0.5,
     mutationStrength: 30,
-    crossoverRate: 0.5,
-    selectionPressure: 0.5,  // LOWERED from 0.7 to allow mediocre genes to survive and evolve
+    selectionPressure: 0.5,
     fitnessBalance: 0.3,
     aspectRatioMutationRate: 0.3,
     boundaryScale: 1.0,
     globalTargetRatio: 2,
     autoPlay: true,
-    showAdjacencies: true,
-    showBoundary: true,
-    editBoundary: true,
 
-    // Advanced Optimization Features (all disabled by default for comparison)
-    useQuadraticPenalty: true,
-    useSimulatedAnnealing: false,
-    useSwapMutation: true,  // ENABLED: Surgical tool for untangling topology
-    swapMutationRate: 0.8,  // ADJUSTED to 0.3 (middle of 0.2-0.4 recommended range)
-    usePartnerBias: true,
-    partnerBiasRate: 0.4,
-    useCenterGravity: false,
-    centerGravityRate: 0.3,
-    centerGravityStrength: 0.05,
+    // Advanced Optimization Features
+    useSwapMutation: true,
+    swapMutationRate: 0.8,
     useAggressiveInflation: false,
     inflationRate: 1.02,
     inflationThreshold: 1.05,
     warmUpIterations: 5,
-    useFreshBlood: true,  // ENABLED: Inject fresh blood to escape local minima
-    freshBloodInterval: 50,  // INCREASED to 50: Give time for evolution to settle before next injection
-    freshBloodWarmUp: 100,  // OPTIMIZED to 50: Enough push-pull cycles to form valid clusters
+    useFreshBlood: true,
+    freshBloodInterval: 50,
+    freshBloodWarmUp: 100,
     useNonLinearOverlapPenalty: true,
     overlapPenaltyExponent: 1.5,
   },

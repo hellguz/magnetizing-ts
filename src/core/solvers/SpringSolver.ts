@@ -13,14 +13,10 @@ const DEFAULT_ASPECT_RATIO_MUTATION_RATE = 0.3;
 
 // Advanced optimization feature defaults
 const DEFAULT_USE_QUADRATIC_PENALTY = true;
-const DEFAULT_USE_SIMULATED_ANNEALING = false;
 const DEFAULT_USE_SWAP_MUTATION = true;
 const DEFAULT_SWAP_MUTATION_RATE = 0.2;
 const DEFAULT_USE_PARTNER_BIAS = true;
 const DEFAULT_PARTNER_BIAS_RATE = 0.4;
-const DEFAULT_USE_CENTER_GRAVITY = false;
-const DEFAULT_CENTER_GRAVITY_RATE = 0.3;
-const DEFAULT_CENTER_GRAVITY_STRENGTH = 0.05;
 const DEFAULT_USE_AGGRESSIVE_INFLATION = false;
 const DEFAULT_INFLATION_RATE = 1.02;
 const DEFAULT_INFLATION_THRESHOLD = 1.05;
@@ -82,14 +78,10 @@ export class SpringSolver {
 
       // Advanced optimization features
       useQuadraticPenalty: config.useQuadraticPenalty ?? DEFAULT_USE_QUADRATIC_PENALTY,
-      useSimulatedAnnealing: config.useSimulatedAnnealing ?? DEFAULT_USE_SIMULATED_ANNEALING,
       useSwapMutation: config.useSwapMutation ?? DEFAULT_USE_SWAP_MUTATION,
       swapMutationRate: config.swapMutationRate ?? DEFAULT_SWAP_MUTATION_RATE,
       usePartnerBias: config.usePartnerBias ?? DEFAULT_USE_PARTNER_BIAS,
       partnerBiasRate: config.partnerBiasRate ?? DEFAULT_PARTNER_BIAS_RATE,
-      useCenterGravity: config.useCenterGravity ?? DEFAULT_USE_CENTER_GRAVITY,
-      centerGravityRate: config.centerGravityRate ?? DEFAULT_CENTER_GRAVITY_RATE,
-      centerGravityStrength: config.centerGravityStrength ?? DEFAULT_CENTER_GRAVITY_STRENGTH,
       useAggressiveInflation: config.useAggressiveInflation ?? DEFAULT_USE_AGGRESSIVE_INFLATION,
       inflationRate: config.inflationRate ?? DEFAULT_INFLATION_RATE,
       inflationThreshold: config.inflationThreshold ?? DEFAULT_INFLATION_THRESHOLD,

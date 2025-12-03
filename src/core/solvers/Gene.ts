@@ -513,7 +513,6 @@ export class Gene {
    * Enhanced with:
    * - Swap Mutation: Teleport rooms to untangle topology
    * - Partner Bias: Move toward connected neighbors
-   * - Center Gravity: Pull toward centroid to prevent explosion
    */
   mutate(
     mutationRate: number,
@@ -564,9 +563,6 @@ export class Gene {
       }
     }
 
-    // Calculate centroid for center gravity feature
-    const centroid = config.useCenterGravity ? this.calculateCentroid() : null;
-
     for (const room of this.rooms) {
       // FEATURE: Partner Bias - move toward connected neighbors
       let mutationApplied = false;
@@ -583,14 +579,6 @@ export class Gene {
           room.y += dy;
           mutationApplied = true;
         }
-      }
-
-      // FEATURE: Center Gravity - pull toward centroid
-      if (config.useCenterGravity && centroid && Math.random() < (config.centerGravityRate ?? 0.3)) {
-        const strength = config.centerGravityStrength ?? 0.05;
-        room.x += (centroid.x - room.x) * strength;
-        room.y += (centroid.y - room.y) * strength;
-        mutationApplied = true;
       }
 
       // Standard position mutation (if no special mutation applied)
@@ -653,24 +641,6 @@ export class Gene {
       room.width = Math.max(1, room.width);
       room.height = Math.max(1, room.height);
     }
-  }
-
-  /**
-   * Calculate the geometric center of all rooms
-   */
-  private calculateCentroid(): Vec2 {
-    let sumX = 0;
-    let sumY = 0;
-
-    for (const room of this.rooms) {
-      sumX += room.x + room.width / 2;
-      sumY += room.y + room.height / 2;
-    }
-
-    return {
-      x: sumX / this.rooms.length,
-      y: sumY / this.rooms.length,
-    };
   }
 
   /**

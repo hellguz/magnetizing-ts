@@ -32,14 +32,10 @@ export interface SpringConfig {
 
   // Advanced optimization features
   useQuadraticPenalty?: boolean;   // Use distance^2 for topological fitness (stronger penalty for stretched connections)
-  useSimulatedAnnealing?: boolean; // Decay mutation strength over generations (prevents local minima)
   useSwapMutation?: boolean;       // Swap x,y positions of random rooms (untangles topology)
   swapMutationRate?: number;       // Probability of swap mutation (0.0 to 1.0)
   usePartnerBias?: boolean;        // Bias mutations toward connected neighbors (guides adjacency)
   partnerBiasRate?: number;        // Probability of biased mutation toward partner (0.0 to 1.0)
-  useCenterGravity?: boolean;      // Pull rooms toward centroid (prevents explosion)
-  centerGravityRate?: number;      // Probability of center gravity pull (0.0 to 1.0)
-  centerGravityStrength?: number;  // Strength of center gravity pull (0.0 to 1.0)
   useAggressiveInflation?: boolean; // Force rooms to grow beyond bounds before squish (fills voids)
   inflationRate?: number;          // Growth rate per iteration (e.g., 1.02 = 2% growth)
   inflationThreshold?: number;     // Max overgrowth (e.g., 1.05 = 5% larger than target)
