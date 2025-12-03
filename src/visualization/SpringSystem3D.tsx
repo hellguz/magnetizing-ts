@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Text, Edges, Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { RoomState, Adjacency } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
 import type { SpringSolver } from '../core/solvers/SpringSolver.js';
@@ -150,7 +151,7 @@ const roomColors: Record<string, string> = {
 
 /**
  * Renders rooms as 3D boxes with labels and adjacency connections.
- * OPTIMIZED: Uses solverRef and useFrame to update from solver state without needing setVersion.
+ * OPTIMIZED: Uses imperative mesh updates via refs to avoid React re-renders.
  */
 export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
   solverRef,
@@ -159,17 +160,77 @@ export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
   showAdjacencies = true,
   showBoundary = true
 }) => {
-  // Use useState to force re-renders when useFrame detects changes
-  const [, setTick] = useState(0);
+  // Store mesh and text references for imperative updates
+  const meshRefsMap = useRef<Map<string, THREE.Mesh>>(new Map());
+  const textRefsMap = useRef<Map<string, any>>(new Map());
+  const lineRefsMap = useRef<Map<number, THREE.Line>>(new Map());
 
-  // Update visualization every frame by reading from solverRef
-  useFrame(() => {
+  // Store initial room list to detect when solver is recreated
+  const initialRooms = useRef<RoomState[]>([]);
+  const [roomsSnapshot, setRoomsSnapshot] = React.useState<RoomState[]>([]);
+
+  // Initialize room snapshot when solver changes
+  useEffect(() => {
     if (solverRef.current) {
-      setTick(t => t + 1);
+      const rooms = solverRef.current.getState();
+      initialRooms.current = rooms;
+      setRoomsSnapshot(rooms);
     }
-  });
+  }, [solverRef.current]);
 
-  const rooms = solverRef.current?.getState() || [];
+  // Update mesh positions imperatively every frame (no React re-render!)
+  useFrame(() => {
+    if (!solverRef.current) return;
+
+    const rooms = solverRef.current.getState();
+
+    // Update each room's mesh position imperatively
+    for (const room of rooms) {
+      const mesh = meshRefsMap.current.get(room.id);
+      const text = textRefsMap.current.get(room.id);
+
+      if (mesh) {
+        const centerX = room.x + room.width / 2;
+        const centerY = room.y + room.height / 2;
+
+        // Imperative update - no React re-render!
+        mesh.position.set(centerX, centerY, 0);
+        mesh.scale.set(room.width, room.height, 1);
+
+        if (text) {
+          text.position.set(centerX, centerY, 1);
+        }
+      }
+    }
+
+    // Update adjacency lines imperatively
+    adjacencies.forEach((adj, index) => {
+      const line = lineRefsMap.current.get(index);
+      if (!line) return;
+
+      const roomA = rooms.find((r: RoomState) => r.id === adj.a);
+      const roomB = rooms.find((r: RoomState) => r.id === adj.b);
+
+      if (roomA && roomB && line.geometry) {
+        const centerA = {
+          x: roomA.x + roomA.width / 2,
+          y: roomA.y + roomA.height / 2,
+        };
+        const centerB = {
+          x: roomB.x + roomB.width / 2,
+          y: roomB.y + roomB.height / 2,
+        };
+
+        // Update line geometry positions
+        const positions = line.geometry.attributes.position;
+        if (positions) {
+          positions.setXYZ(0, centerA.x, centerA.y, 0);
+          positions.setXYZ(1, centerB.x, centerB.y, 0);
+          positions.needsUpdate = true;
+        }
+      }
+    });
+  });
 
   return (
     <>
@@ -182,10 +243,10 @@ export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
         />
       )}
 
-      {/* Render adjacency lines */}
+      {/* Render adjacency lines - will be updated imperatively via refs */}
       {showAdjacencies && adjacencies.map((adj, index) => {
-        const roomA = rooms.find((r: RoomState) => r.id === adj.a);
-        const roomB = rooms.find((r: RoomState) => r.id === adj.b);
+        const roomA = roomsSnapshot.find((r: RoomState) => r.id === adj.a);
+        const roomB = roomsSnapshot.find((r: RoomState) => r.id === adj.b);
 
         if (!roomA || !roomB) return null;
 
@@ -199,29 +260,45 @@ export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
         };
 
         return (
-          <Line
+          <line
             key={`adj-${index}`}
-            points={[
-              [centerA.x, centerA.y, 0],
-              [centerB.x, centerB.y, 0],
-            ]}
-            color="rgba(117, 117, 117, 1)"
-            lineWidth={1}
-          />
+            ref={(line: any) => {
+              if (line) lineRefsMap.current.set(index, line);
+            }}
+          >
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([
+                  centerA.x, centerA.y, 0,
+                  centerB.x, centerB.y, 0
+                ])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color="#757575" />
+          </line>
         );
       })}
 
-      {/* Render rooms */}
-      {rooms.map((room: RoomState) => {
+      {/* Render rooms - meshes will be updated imperatively via refs */}
+      {roomsSnapshot.map((room: RoomState) => {
         const color = roomColors[room.id] || '#cccccc';
         const centerX = room.x + room.width / 2;
         const centerY = room.y + room.height / 2;
 
         return (
           <group key={room.id}>
-            {/* Room box */}
-            <mesh position={[centerX, centerY, 0]}>
-              <boxGeometry args={[room.width, room.height, 1]} />
+            {/* Room box - ref stored for imperative updates */}
+            <mesh
+              ref={(mesh) => {
+                if (mesh) meshRefsMap.current.set(room.id, mesh);
+              }}
+              position={[centerX, centerY, 0]}
+            >
+              {/* Unit cube - will be scaled imperatively in useFrame */}
+              <boxGeometry args={[1, 1, 1]} />
               <meshBasicMaterial
                 color={color}
                 transparent
@@ -231,8 +308,11 @@ export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
               <Edges color="black" />
             </mesh>
 
-            {/* Room label */}
+            {/* Room label - ref stored for imperative updates */}
             <Text
+              ref={(text) => {
+                if (text) textRefsMap.current.set(room.id, text);
+              }}
               position={[centerX, centerY, 1]}
               fontSize={12}
               color="black"
