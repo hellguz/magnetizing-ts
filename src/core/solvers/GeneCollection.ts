@@ -144,6 +144,69 @@ export class GeneCollection {
 
     // Increment generation counter for simulated annealing
     this.currentGeneration++;
+
+    // FEATURE: Fresh Blood - periodically replace worst performers with new random genes
+    // This maintains genetic diversity and prevents premature convergence
+    if (this.config.useFreshBlood) {
+      const interval = this.config.freshBloodInterval ?? 20;
+      const warmUp = this.config.freshBloodWarmUp ?? 30;
+
+      if (this.currentGeneration % interval === 0) {
+        // Sort by fitness to identify worst performers (lower is better, so worst are at the end)
+        this.genes.sort((a, b) => a.fitness - b.fitness);
+
+        // Replace worst quarter with fresh random genes
+        const quarterSize = Math.floor(this.genes.length / 4);
+        const numToReplace = Math.max(1, quarterSize); // At least 1
+
+        // Keep the best 75%
+        this.genes = this.genes.slice(0, this.genes.length - numToReplace);
+
+        // Get template for structure (room properties) but will randomize positions
+        const templateGene = this.genes[0];
+
+        // Calculate boundary bounds for random placement
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const p of this.boundary) {
+          minX = Math.min(minX, p.x);
+          maxX = Math.max(maxX, p.x);
+          minY = Math.min(minY, p.y);
+          maxY = Math.max(maxY, p.y);
+        }
+
+        // Add some margin to keep rooms away from edges initially
+        const margin = 20;
+        minX += margin;
+        maxX -= margin;
+        minY += margin;
+        maxY -= margin;
+
+        // Generate fresh random genes with COMPLETELY RANDOM positions
+        for (let i = 0; i < numToReplace; i++) {
+          const freshGene = templateGene.clone();
+
+          // GLOBAL EXPLORATION: Scramble all positions randomly within boundary
+          // This simulates "refreshing the page" - completely new starting configuration
+          for (const room of freshGene.rooms) {
+            // Random position within boundary
+            room.x = minX + Math.random() * (maxX - minX);
+            room.y = minY + Math.random() * (maxY - minY);
+
+            // Reset dimensions to initial target values (removes any "squished" bias)
+            room.width = Math.sqrt(room.targetArea * room.targetRatio);
+            room.height = room.targetArea / room.width;
+          }
+
+          // FEATURE: Apply warm-up iterations to untangle the random chaos
+          // This allows fresh genes to settle into valid positions before competing
+          for (let j = 0; j < warmUp; j++) {
+            freshGene.applySquishCollisions(this.boundary, this.config, this.globalTargetRatio);
+          }
+
+          this.genes.push(freshGene);
+        }
+      }
+    }
   }
 
   /**

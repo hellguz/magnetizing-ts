@@ -44,6 +44,9 @@ export interface SpringConfig {
   inflationRate?: number;          // Growth rate per iteration (e.g., 1.02 = 2% growth)
   inflationThreshold?: number;     // Max overgrowth (e.g., 1.05 = 5% larger than target)
   warmUpIterations?: number;       // Number of physics iterations to run immediately after mutation (0-50)
+  useFreshBlood?: boolean;         // Periodically replace worst performers with new random genes
+  freshBloodInterval?: number;     // Every N iterations, inject fresh blood (5-200)
+  freshBloodWarmUp?: number;       // Number of physics iterations for new genes (default 30)
 }
 
 export interface RoomRequest {

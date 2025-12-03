@@ -46,6 +46,9 @@ interface SpringVisualizationArgs {
   inflationRate: number;
   inflationThreshold: number;
   warmUpIterations: number;
+  useFreshBlood: boolean;
+  freshBloodInterval: number;
+  freshBloodWarmUp: number;
 }
 
 const springTemplates: Record<TemplateType, SpringTemplate> = {
@@ -673,10 +676,13 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       inflationRate: args.inflationRate,
       inflationThreshold: args.inflationThreshold,
       warmUpIterations: args.warmUpIterations,
+      useFreshBlood: args.useFreshBlood,
+      freshBloodInterval: args.freshBloodInterval,
+      freshBloodWarmUp: args.freshBloodWarmUp,
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp]);
 
   // Handle boundary changes from editor
   const handleBoundaryChange = useCallback((newPoints: Vec2[]) => {
@@ -713,7 +719,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp]);
 
   // Handle reset generation
   const handleReset = useCallback(() => {
@@ -746,10 +752,13 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       inflationRate: args.inflationRate,
       inflationThreshold: args.inflationThreshold,
       warmUpIterations: args.warmUpIterations,
+      useFreshBlood: args.useFreshBlood,
+      freshBloodInterval: args.freshBloodInterval,
+      freshBloodWarmUp: args.freshBloodWarmUp,
     }, args.globalTargetRatio);
 
     setVersion((v) => v + 1);
-  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations]);
+  }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.crossoverRate, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useQuadraticPenalty, args.useSimulatedAnnealing, args.useSwapMutation, args.swapMutationRate, args.usePartnerBias, args.partnerBiasRate, args.useCenterGravity, args.centerGravityRate, args.centerGravityStrength, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp]);
 
   // Animation loop controlled by autoPlay prop
   React.useEffect(() => {
@@ -951,6 +960,18 @@ const meta: Meta<SpringVisualizationArgs> = {
       control: { type: 'range', min: 0, max: 50, step: 1 },
       description: '[OPTIMIZATION] Physics Warm-Up: Number of physics iterations to run immediately after mutation (prevents "death of potential geniuses")',
     },
+    useFreshBlood: {
+      control: { type: 'boolean' },
+      description: '[OPTIMIZATION] Fresh Blood: Periodically replace worst quarter with completely random positions (like "page refresh") to maintain diversity and escape local minima',
+    },
+    freshBloodInterval: {
+      control: { type: 'range', min: 5, max: 200, step: 5 },
+      description: 'Every N iterations, inject fresh blood (only if useFreshBlood is enabled)',
+    },
+    freshBloodWarmUp: {
+      control: { type: 'range', min: 0, max: 100, step: 5 },
+      description: 'Number of physics warm-up iterations for fresh genes (only if useFreshBlood is enabled)',
+    },
   },
   parameters: {
     layout: 'fullscreen',
@@ -992,5 +1013,8 @@ export const Default: Story = {
     inflationRate: 1.02,
     inflationThreshold: 1.05,
     warmUpIterations: 20,
+    useFreshBlood: false,
+    freshBloodInterval: 20,
+    freshBloodWarmUp: 30,
   },
 };
