@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Canvas } from '@react-three/fiber';
 import { SceneContainer } from '../visualization/SceneContainer.js';
 import { SpringSystem3D } from '../visualization/SpringSystem3D.js';
