@@ -8,14 +8,17 @@ interface DiscreteGrid3DProps {
   cellSize: number;
 }
 
+// OPTIMIZATION: Move temp objects outside component to avoid recreating on every render
+const tempObject = new THREE.Object3D();
+const tempColor = new THREE.Color();
+
 /**
  * Efficiently renders a discrete grid using InstancedMesh.
  * Each cell is rendered as a small plane with a gap to simulate grid lines.
+ * OPTIMIZED: Temp objects created once at module scope instead of per render.
  */
 export const DiscreteGrid3D: React.FC<DiscreteGrid3DProps> = ({ grid, cellSize }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const tempObject = new THREE.Object3D();
-  const tempColor = new THREE.Color();
 
   // Color map matching the original canvas renderer
   const roomColors = new Map<number, string>([

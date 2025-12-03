@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Text, Edges, Line } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import { RoomState, Adjacency } from '../types.js';
 import { Vec2 } from '../core/geometry/Vector2.js';
+import type { SpringSolver } from '../core/solvers/SpringSolver.js';
 
 interface SpringSystem3DProps {
-  rooms: RoomState[];
+  solverRef: React.MutableRefObject<SpringSolver | null>;
   adjacencies: Adjacency[];
   boundary?: Vec2[];
   showAdjacencies?: boolean;
@@ -148,14 +150,27 @@ const roomColors: Record<string, string> = {
 
 /**
  * Renders rooms as 3D boxes with labels and adjacency connections.
+ * OPTIMIZED: Uses solverRef and useFrame to update from solver state without needing setVersion.
  */
 export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
-  rooms,
+  solverRef,
   adjacencies,
   boundary,
   showAdjacencies = true,
   showBoundary = true
 }) => {
+  // Use useState to force re-renders when useFrame detects changes
+  const [, setTick] = useState(0);
+
+  // Update visualization every frame by reading from solverRef
+  useFrame(() => {
+    if (solverRef.current) {
+      setTick(t => t + 1);
+    }
+  });
+
+  const rooms = solverRef.current?.getState() || [];
+
   return (
     <>
       {/* Render boundary */}
@@ -169,8 +184,8 @@ export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
 
       {/* Render adjacency lines */}
       {showAdjacencies && adjacencies.map((adj, index) => {
-        const roomA = rooms.find((r) => r.id === adj.a);
-        const roomB = rooms.find((r) => r.id === adj.b);
+        const roomA = rooms.find((r: RoomState) => r.id === adj.a);
+        const roomB = rooms.find((r: RoomState) => r.id === adj.b);
 
         if (!roomA || !roomB) return null;
 
@@ -197,7 +212,7 @@ export const SpringSystem3D: React.FC<SpringSystem3DProps> = ({
       })}
 
       {/* Render rooms */}
-      {rooms.map((room) => {
+      {rooms.map((room: RoomState) => {
         const color = roomColors[room.id] || '#cccccc';
         const centerX = room.x + room.width / 2;
         const centerY = room.y + room.height / 2;

@@ -8,6 +8,25 @@ export interface AABB {
   maxY: number;
 }
 
+// OPTIMIZATION: Module-level scratch buffers to avoid GC pressure in hot paths
+// These are reused for temporary calculations instead of allocating new arrays
+// We need two buffers because collision checks compare pairs of rectangles
+const scratchRectangleA: Vec2[] = [
+  { x: 0, y: 0 },
+  { x: 0, y: 0 },
+  { x: 0, y: 0 },
+  { x: 0, y: 0 },
+];
+
+const scratchRectangleB: Vec2[] = [
+  { x: 0, y: 0 },
+  { x: 0, y: 0 },
+  { x: 0, y: 0 },
+  { x: 0, y: 0 },
+];
+
+let useScratchA = true; // Alternates between buffers
+
 /**
  * Polygon utilities using Clipper library for precise geometric operations.
  */
@@ -71,14 +90,25 @@ export class Polygon {
 
   /**
    * Create a rectangle polygon from position and size
+   * OPTIMIZED: Uses scratch buffer to avoid allocating new arrays in hot paths
+   * Alternates between two buffers to handle concurrent use in collision checks
    */
   static createRectangle(x: number, y: number, width: number, height: number): Vec2[] {
-    return [
-      { x, y },
-      { x: x + width, y },
-      { x: x + width, y: y + height },
-      { x, y: y + height },
-    ];
+    // Alternate between buffers to support pairwise collision checks
+    const buffer = useScratchA ? scratchRectangleA : scratchRectangleB;
+    useScratchA = !useScratchA;
+
+    // Reuse scratch buffer - update in place
+    buffer[0].x = x;
+    buffer[0].y = y;
+    buffer[1].x = x + width;
+    buffer[1].y = y;
+    buffer[2].x = x + width;
+    buffer[2].y = y + height;
+    buffer[3].x = x;
+    buffer[3].y = y + height;
+
+    return buffer;
   }
 
   /**

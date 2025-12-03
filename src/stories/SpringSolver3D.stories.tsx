@@ -575,13 +575,14 @@ const springTemplates: Record<TemplateType, SpringTemplate> = {
 
 // Spring Solver Story Component
 const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
-  const [version, setVersion] = useState(0);
   const solverRef = useRef<SpringSolver | null>(null);
   const scaledBoundaryRef = useRef<Vec2[]>([]);
   const animationIdRef = useRef<number | null>(null);
   const templateRef = useRef<SpringTemplate | null>(null);
   const [editableBoundary, setEditableBoundary] = useState<Vec2[]>([]);
   const initialCameraTargetRef = useRef<[number, number, number]>([0, 0, 0]);
+  // Trigger re-renders for info display (statsUpdate not read directly, just used as dependency)
+  const [, setStatsUpdate] = useState(0);
 
   // Helper: Calculate centroid of a polygon
   const calculateCentroid = useCallback((points: Vec2[]) => {
@@ -669,8 +670,6 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
       overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
-
-    setVersion((v) => v + 1);
   }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle boundary changes from editor
@@ -708,8 +707,6 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
       overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
-
-    setVersion((v) => v + 1);
   }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Handle reset generation
@@ -745,8 +742,6 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
       overlapPenaltyExponent: args.overlapPenaltyExponent,
     }, args.globalTargetRatio);
-
-    setVersion((v) => v + 1);
   }, [args.template, args.populationSize, args.mutationRate, args.mutationStrength, args.selectionPressure, args.fitnessBalance, args.aspectRatioMutationRate, args.globalTargetRatio, args.useSwapMutation, args.swapMutationRate, args.useAggressiveInflation, args.inflationRate, args.inflationThreshold, args.warmUpIterations, args.useFreshBlood, args.freshBloodInterval, args.freshBloodWarmUp, args.useNonLinearOverlapPenalty, args.overlapPenaltyExponent]);
 
   // Animation loop controlled by autoPlay prop
@@ -758,10 +753,17 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
     }
 
     if (args.autoPlay && solverRef.current) {
+      let frameCount = 0;
       const animate = () => {
         if (solverRef.current && !solverRef.current.hasConverged(0.01)) {
           solverRef.current.step();
-          setVersion((v) => v + 1);
+
+          // Update stats display every 10 frames (reduces React overhead)
+          frameCount++;
+          if (frameCount % 10 === 0) {
+            setStatsUpdate(s => s + 1);
+          }
+
           animationIdRef.current = requestAnimationFrame(animate);
         }
       };
@@ -774,9 +776,8 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
         animationIdRef.current = null;
       }
     };
-  }, [args.autoPlay, version]);
+  }, [args.autoPlay]);
 
-  const rooms = solverRef.current?.getState() || [];
   const adjacencies = springTemplates[args.template].adjacencies;
 
   return (
@@ -784,7 +785,7 @@ const SpringSolverVisualization: React.FC<SpringVisualizationArgs> = (args) => {
       <Canvas>
         <SceneContainer zoom={1} target={initialCameraTargetRef.current}>
           <SpringSystem3D
-            rooms={rooms}
+            solverRef={solverRef}
             adjacencies={adjacencies}
             boundary={scaledBoundaryRef.current}
             showAdjacencies={true}

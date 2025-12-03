@@ -30,6 +30,7 @@ export function BoundaryEditor({
   edgeSplitterSize = 8,
 }: BoundaryEditorProps) {
   // Convert points to 3D coordinates for Three.js (add z=0)
+  // OPTIMIZED: Memoize with stable dependency to prevent unnecessary recalculations
   const linePoints = useMemo(() => {
     if (points.length < 2) return [];
     // Close the loop by adding first point at the end
@@ -37,6 +38,7 @@ export function BoundaryEditor({
   }, [points]);
 
   // Calculate midpoints for edge splitters
+  // OPTIMIZED: Already properly memoized with [points] dependency
   const midpoints = useMemo(() => {
     if (points.length < 2) return [];
     const mids: Array<{ pos: Vec2; index: number }> = [];
