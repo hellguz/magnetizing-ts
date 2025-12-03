@@ -128,7 +128,8 @@ export class Gene {
    *
    * FIXED: Now adjusts x position when squishing to actually resolve collisions.
    * When a room on the RIGHT is squished, we increase its x (move left edge right)
-   * while decreasing width (move right edge left). This "squishes from the left".
+   * while decreasing width (move right edge left).
+   * This "squishes from the left".
    */
   private trySquishHorizontal(roomA: RoomStateES, roomB: RoomStateES, overlap: number, globalTargetRatio?: number, accumulatePressure: boolean = true): void {
     // Accumulate horizontal pressure on both rooms (only on first iteration)
@@ -210,7 +211,8 @@ export class Gene {
    *
    * FIXED: Now adjusts y position when squishing to actually resolve collisions.
    * When a room on the BOTTOM is squished, we increase its y (move top edge down)
-   * while decreasing height (move bottom edge up). This "squishes from the top".
+   * while decreasing height (move bottom edge up).
+   * This "squishes from the top".
    */
   private trySquishVertical(roomA: RoomStateES, roomB: RoomStateES, overlap: number, globalTargetRatio?: number, accumulatePressure: boolean = true): void {
     // Accumulate vertical pressure on both rooms (only on first iteration)
@@ -317,7 +319,6 @@ export class Gene {
 
     for (const room of this.rooms) {
       let iteration = 0;
-
       while (iteration < MAX_ITERATIONS) {
         // Get all four corners of the room
         const corners: Vec2[] = [
@@ -335,7 +336,6 @@ export class Gene {
         for (const corner of corners) {
           if (!Polygon.pointInPolygon(corner, boundary)) {
             allInside = false;
-
             // Find the farthest outside corner
             const closestOnBoundary = Polygon.closestPointOnPolygon(corner, boundary);
             const distSq =
@@ -364,6 +364,12 @@ export class Gene {
           // Move room center by push vector (with small overshoot to ensure convergence)
           room.x += pushX * 1.1;
           room.y += pushY * 1.1;
+
+          // CRITICAL FIX: Apply pressure from boundary to force aspect ratio adaptation
+          // If the wall is pushing us hard in X, we have "X pressure"
+          // This tells the mutation system to make the room narrower next generation
+          room.accumulatedPressureX += Math.abs(pushX) * 10;
+          room.accumulatedPressureY += Math.abs(pushY) * 10;
         }
 
         iteration++;
@@ -424,6 +430,7 @@ export class Gene {
 
             const overlapX = Math.min(aabbA.maxX, aabbB.maxX) - Math.max(aabbA.minX, aabbB.minX);
             const overlapY = Math.min(aabbA.maxY, aabbB.maxY) - Math.max(aabbA.minY, aabbB.minY);
+
             const aabbOverlapArea = overlapX * overlapY;
 
             // Calculate "compactness" - how much of the AABB is actually overlapping
@@ -457,7 +464,12 @@ export class Gene {
       totalOutOfBounds += outsideArea;
     }
 
-    return totalOverlap + totalOutOfBounds;
+    // CRITICAL FIX: Weighted penalty for out-of-bounds
+    // Being outside the building is significantly worse than internal overlapping
+    // This forces the solver to prioritize keeping rooms inside
+    const OUT_OF_BOUNDS_PENALTY_MULTIPLIER = 100;
+
+    return totalOverlap + (totalOutOfBounds * OUT_OF_BOUNDS_PENALTY_MULTIPLIER);
   }
 
   /**
@@ -532,6 +544,7 @@ export class Gene {
       if (swapCandidates.length > 0) {
         // Pick a random candidate from top 3 worst connections
         const candidate = swapCandidates[Math.floor(Math.random() * Math.min(3, swapCandidates.length))];
+
         const roomA = this.rooms.find(r => r.id === candidate.roomAId);
         const roomB = this.rooms.find(r => r.id === candidate.roomBId);
 
@@ -566,11 +579,9 @@ export class Gene {
     for (const room of this.rooms) {
       // FEATURE: Partner Bias - move toward connected neighbors
       let mutationApplied = false;
-
       if (config.usePartnerBias && Math.random() < (config.partnerBiasRate ?? 0.4)) {
         // Find a connected neighbor
         const connectedNeighbor = this.findConnectedNeighbor(room, adjacencies);
-
         if (connectedNeighbor) {
           // Move 70% closer to the neighbor
           const dx = (connectedNeighbor.x - room.x) * 0.7;
@@ -691,17 +702,14 @@ export class Gene {
 
       // Calculate current distance
       const currentDistance = this.calculateDistance(roomA, roomB);
-
       // Calculate what distance would be if we swapped their positions
       const swappedDistance = this.calculateDistanceSwapped(roomA, roomB);
 
       // If swapping would reduce distance significantly, it's a good candidate
       const improvement = currentDistance - swappedDistance;
-
       if (improvement > 0) {
         // Weight by adjacency weight
         const weightedImprovement = improvement * (adj.weight ?? 1.0);
-
         candidates.push({
           roomAId: adj.a,
           roomBId: adj.b,
@@ -712,7 +720,6 @@ export class Gene {
 
     // Sort by improvement score (highest first = worst current connections)
     candidates.sort((a, b) => b.improvementScore - a.improvementScore);
-
     return candidates;
   }
 
@@ -728,7 +735,6 @@ export class Gene {
       x: roomB.x + roomB.width / 2,
       y: roomB.y + roomB.height / 2,
     };
-
     const dx = centerB.x - centerA.x;
     const dy = centerB.y - centerA.y;
     return Math.sqrt(dx * dx + dy * dy);
@@ -747,7 +753,6 @@ export class Gene {
       x: roomA.x + roomB.width / 2, // B's dimensions at A's position
       y: roomA.y + roomB.height / 2,
     };
-
     const dx = centerB.x - centerA.x;
     const dy = centerB.y - centerA.y;
     return Math.sqrt(dx * dx + dy * dy);
