@@ -51,6 +51,12 @@ export class EvolutionaryFloorplanSolver {
       }));
 
       const gene = new EvolutionaryGene(randomizedRooms);
+
+      // CRITICAL: Apply boundary constraints and initial physics to ensure rooms start inside
+      for (let j = 0; j < 20; j++) {
+        gene.applySquishCollisions(this.boundary, this.config as any, this.globalTargetRatio);
+      }
+
       this.population.push(gene);
     }
   }

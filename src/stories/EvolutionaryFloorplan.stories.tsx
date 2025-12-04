@@ -19,13 +19,17 @@ import {
 } from "./configs/evolutionaryDefaults.js";
 
 // Evolutionary Floorplan Solver Story Component
-const EvolutionaryFloorplanVisualization: React.FC<EvolutionaryVisualizationArgs> = (args) => {
+const EvolutionaryFloorplanVisualization: React.FC<
+  EvolutionaryVisualizationArgs
+> = (args) => {
   const solverRef = useRef<EvolutionaryFloorplanSolver | null>(null);
   const scaledBoundaryRef = useRef<Vec2[]>([]);
   const initialCameraTargetRef = useRef<[number, number, number]>([0, 0, 0]);
 
   // State for tracking population snapshots (for grid view)
-  const [populationSnapshot, setPopulationSnapshot] = useState<EvolutionaryGene[]>([]);
+  const [populationSnapshot, setPopulationSnapshot] = useState<
+    EvolutionaryGene[]
+  >([]);
 
   // Trigger re-renders for info display
   const [, setStatsUpdate] = useState(0);
@@ -57,7 +61,7 @@ const EvolutionaryFloorplanVisualization: React.FC<EvolutionaryVisualizationArgs
     const currentBoundary = scaledBoundaryRef.current;
 
     // Convert RoomState to RoomStateES (add targetArea and pressure fields)
-    const roomsES = rooms.map(room => ({
+    const roomsES = rooms.map((room) => ({
       ...room,
       targetArea: room.width * room.height,
       pressureX: 0,
@@ -138,8 +142,13 @@ const EvolutionaryFloorplanVisualization: React.FC<EvolutionaryVisualizationArgs
 
   return (
     <div style={{ display: "flex", width: "100%", height: "100vh" }}>
-      {/* Main View - 70% */}
-      <div style={{ width: args.showPopulationGrid ? "70%" : "100%", position: "relative" }}>
+      {/* Main View - 60% */}
+      <div
+        style={{
+          width: args.showPopulationGrid ? "60%" : "100%",
+          position: "relative",
+        }}
+      >
         <Canvas>
           <SceneContainer zoom={1} target={initialCameraTargetRef.current}>
             {solverRef.current && (
@@ -175,15 +184,19 @@ const EvolutionaryFloorplanVisualization: React.FC<EvolutionaryVisualizationArgs
           <br />
           Generation: <strong>{stats?.generation || 0}</strong> / 100
           <br />
-          Best Fitness: <strong>{stats?.bestFitness.toFixed(2) || "0.00"}</strong>
+          Best Fitness:{" "}
+          <strong>{stats?.bestFitness.toFixed(2) || "0.00"}</strong>
           <br />
           Avg Fitness: <strong>{stats?.avgFitness.toFixed(2) || "0.00"}</strong>
           <br />
           <br />
-          <span style={{ fontSize: "11px", color: "#666" }}>Fitness Components (Best):</span>
+          <span style={{ fontSize: "11px", color: "#666" }}>
+            Fitness Components (Best):
+          </span>
           <br />
           <span style={{ fontSize: "11px" }}>
-            &nbsp;&nbsp;Shared Wall: {stats?.bestFitnessSharedWall.toFixed(2) || "0.00"}
+            &nbsp;&nbsp;Shared Wall:{" "}
+            {stats?.bestFitnessSharedWall.toFixed(2) || "0.00"}
           </span>
           <br />
           <span style={{ fontSize: "11px" }}>
@@ -221,25 +234,12 @@ const EvolutionaryFloorplanVisualization: React.FC<EvolutionaryVisualizationArgs
         )}
       </div>
 
-      {/* Grid View - 30% */}
+      {/* Grid View - 40% */}
       {args.showPopulationGrid && (
-        <div style={{ width: "30%", background: "#f0f0f0", overflow: "hidden" }}>
-          <div
-            style={{
-              height: "40px",
-              background: "#2196F3",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: "bold",
-              fontSize: "14px",
-              fontFamily: "sans-serif",
-            }}
-          >
-            Population (25 Variants)
-          </div>
-          <div style={{ height: "calc(100% - 40px)", overflow: "auto" }}>
+        <div
+          style={{ width: "40%", background: "#f0f0f0", overflow: "hidden" }}
+        >
+          <div style={{ height: "100%", overflow: "auto" }}>
             <PopulationGrid3D
               population={populationSnapshot}
               boundary={scaledBoundaryRef.current}
@@ -287,7 +287,8 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     },
     rotationProbability: {
       control: { type: "range", min: 0.0, max: 1.0, step: 0.1 },
-      description: "Weight for rotation mutation (rotate entire floorplan 25°-335°)",
+      description:
+        "Weight for rotation mutation (rotate entire floorplan 25°-335°)",
     },
 
     // Physics
@@ -357,7 +358,8 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     },
     overlapPenaltyExponent: {
       control: { type: "range", min: 1.0, max: 3.0, step: 0.1 },
-      description: "Exponent for overlap penalty (1.0 = linear, 2.0 = quadratic)",
+      description:
+        "Exponent for overlap penalty (1.0 = linear, 2.0 = quadratic)",
     },
   },
   parameters: {
