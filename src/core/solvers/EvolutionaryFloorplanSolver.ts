@@ -146,14 +146,9 @@ export class EvolutionaryFloorplanSolver {
 
   /**
    * Legacy Step: Executes ONE full generation cycle.
-   * 1. Mutation (on previous population clones)
-   * 2. Physics (10 iterations)
-   * 3. Selection
-   * 4. Duplication
    */
   step(): void {
     // Legacy support: Just run the granular steps in order
-    // Note: This approximates the loop, but usually stepPhysics is run multiple times
     this.stepEvolution();
     for(let i=0; i<this.config.physicsIterations; i++) {
         this.stepPhysics();
@@ -164,40 +159,6 @@ export class EvolutionaryFloorplanSolver {
     for (let i = 0; i < generations && this.generation < this.config.maxGenerations; i++) {
       this.step();
     }
-  }
-
-  private applyMutations(): EvolutionaryGene[] {
-    const mutants: EvolutionaryGene[] = [];
-    for (const parent of this.population) {
-      const mutant = parent.clone();
-      const numMutations = Math.floor(Math.random() * 3) + 1;
-
-      for (let i = 0; i < numMutations; i++) {
-        const rand = Math.random();
-        const totalProb =
-          this.config.teleportProbability +
-          this.config.swapProbability +
-          this.config.rotationProbability;
-
-        // BUG FIX: If total probability is 0, skip mutation
-        if (totalProb <= 0.0001) continue;
-        
-        const normalizedRand = rand * totalProb;
-
-        if (normalizedRand < this.config.teleportProbability) {
-          this.applyTeleport(mutant);
-        } else if (
-          normalizedRand <
-          this.config.teleportProbability + this.config.swapProbability
-        ) {
-          this.applySwap(mutant);
-        } else {
-          this.applyRotation(mutant);
-        }
-      }
-      mutants.push(mutant);
-    }
-    return mutants;
   }
 
   private applyTeleport(gene: EvolutionaryGene): void {
@@ -284,7 +245,6 @@ export class EvolutionaryFloorplanSolver {
       bestFitnessG: best.fitnessG,
       bestFitnessT: best.fitnessT,
       bestFitnessSharedWall: best.fitnessSharedWall,
-      bestFitnessArea: best.fitnessArea,
     };
   }
 

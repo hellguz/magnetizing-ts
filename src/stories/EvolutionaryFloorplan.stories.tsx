@@ -93,7 +93,6 @@ const EvolutionaryFloorplanVisualization: React.FC<
         sharedWallTarget: args.sharedWallTarget,
         sharedWallWeight: args.sharedWallWeight,
         geometricWeight: args.geometricWeight,
-        areaDeviationWeight: args.areaDeviationWeight,
         teleportProbability: args.teleportProbability,
         swapProbability: args.swapProbability,
         rotationProbability: args.rotationProbability,
@@ -112,7 +111,6 @@ const EvolutionaryFloorplanVisualization: React.FC<
     args.sharedWallTarget,
     args.sharedWallWeight,
     args.geometricWeight,
-    args.areaDeviationWeight,
     args.teleportProbability,
     args.swapProbability,
     args.rotationProbability,
@@ -272,10 +270,6 @@ const EvolutionaryFloorplanVisualization: React.FC<
             &nbsp;&nbsp;Geometric: {stats?.bestFitnessG.toFixed(2) || "0.00"}
           </span>
           <br />
-          <span style={{ fontSize: "11px" }}>
-            &nbsp;&nbsp;Area: {stats?.bestFitnessArea.toFixed(2) || "0.00"}
-          </span>
-          <br />
           <br />
           <span style={{ fontSize: "11px", color: "#666" }}>
             Population: 25 variants
@@ -378,10 +372,6 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     geometricWeight: {
       control: { type: "range", min: 1, max: 100, step: 5 },
       description: "Weight for geometric penalties (overlap + out-of-bounds)",
-    },
-    areaDeviationWeight: {
-      control: { type: "range", min: 1, max: 100, step: 5 },
-      description: "Weight for room area deviation from target",
     },
 
     // Visualization

@@ -89,9 +89,7 @@ export const PopulationGrid3D: React.FC<PopulationGrid3DProps> = ({
             2
           )}\nShared Wall: ${gene.fitnessSharedWall.toFixed(
             2
-          )}\nGeometric: ${gene.fitnessG.toFixed(
-            2
-          )}\nArea: ${gene.fitnessArea.toFixed(2)}`}
+          )}\nGeometric: ${gene.fitnessG.toFixed(2)}`}
         >
           {/* Fitness score overlay */}
           {/* <div

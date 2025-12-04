@@ -19,7 +19,6 @@ export interface EvolutionaryVisualizationArgs {
   sharedWallTarget: number;
   sharedWallWeight: number;
   geometricWeight: number;
-  areaDeviationWeight: number;
 
   // Visualization
   showPopulationGrid: boolean;
@@ -56,9 +55,8 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
 
   // Fitness weights
   sharedWallTarget: 1.5,           // 1.5 meters minimum shared wall
-  sharedWallWeight: 1000,          // High priority (dominates fitness)
+  sharedWallWeight: 1500,          // High priority (dominates fitness)
   geometricWeight: 10,             // Moderate penalty for overlaps/out-of-bounds
-  areaDeviationWeight: 20,         // Moderate penalty for area deviation
 
   // Visualization
   showPopulationGrid: true,
