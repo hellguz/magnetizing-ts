@@ -12,6 +12,7 @@ import {
   evolutionaryTemplates,
   scaleBoundaryToRoomArea,
   scaleBoundary,
+  scaleRoomsToBoundary,
   calculateCentroid,
 } from "./templates/evolutionaryTemplates.js";
 import {
@@ -71,8 +72,11 @@ const EvolutionaryFloorplanVisualization: React.FC<
       ? editableBoundary
       : scaledBoundaryRef.current;
 
+    // Scale rooms to fit boundary (80% fill ratio)
+    const scaledRooms = scaleRoomsToBoundary(rooms, currentBoundary, 1.0);
+
     // Convert RoomState to RoomStateES (add targetArea and pressure fields)
-    const roomsES = rooms.map((room) => ({
+    const roomsES = scaledRooms.map((room) => ({
       ...room,
       targetArea: room.width * room.height,
       pressureX: 0,

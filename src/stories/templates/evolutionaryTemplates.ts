@@ -91,3 +91,37 @@ export function scaleBoundary(
     y: centroid.y + (p.y - centroid.y) * scale,
   }));
 }
+
+/**
+ * Scale rooms to match boundary area.
+ * Ensures that total room area fits within the boundary.
+ *
+ * @param rooms Array of room states to scale
+ * @param boundary Boundary polygon
+ * @param targetFillRatio Ratio of room area to boundary area (default 0.8 for 80% fill)
+ * @returns Scaled rooms
+ */
+export function scaleRoomsToBoundary(
+  rooms: RoomState[],
+  boundary: Vec2[],
+  targetFillRatio: number = 0.8
+): RoomState[] {
+  // Calculate total room area
+  const totalRoomArea = rooms.reduce((sum, r) => sum + r.width * r.height, 0);
+
+  // Calculate boundary area
+  const boundaryArea = calculatePolygonArea(boundary);
+
+  // Calculate scale factor (area scales with square of linear scale)
+  const targetArea = boundaryArea * targetFillRatio;
+  const areaScale = Math.sqrt(targetArea / totalRoomArea);
+
+  // Scale all room dimensions
+  return rooms.map(r => ({
+    ...r,
+    width: r.width * areaScale,
+    height: r.height * areaScale,
+    x: r.x * areaScale,
+    y: r.y * areaScale,
+  }));
+}
