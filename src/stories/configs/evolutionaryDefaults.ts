@@ -32,6 +32,7 @@ export interface EvolutionaryVisualizationArgs {
   autoScaleBoundary: boolean;
   boundaryScale: number;
   globalTargetRatio: number;
+  editBoundary: boolean;
 
   // Advanced
   useNonLinearOverlapPenalty: boolean;
@@ -70,6 +71,7 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
   autoScaleBoundary: true,         // Auto-scale boundary to match room areas
   boundaryScale: 1.0,              // Additional manual scaling
   globalTargetRatio: 2.0,          // Global aspect ratio constraint
+  editBoundary: false,             // Enable boundary editing
 
   // Advanced
   useNonLinearOverlapPenalty: true,

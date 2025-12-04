@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "../visualization/SceneContainer.js";
 import { SpringSystem3D } from "../visualization/SpringSystem3D.js";
 import { PopulationGrid3D } from "../visualization/PopulationGrid3D.js";
+import { BoundaryEditor } from "../visualization/BoundaryEditor.js";
 import { EvolutionaryFloorplanSolver } from "../core/solvers/EvolutionaryFloorplanSolver.js";
 import { EvolutionaryGene } from "../core/solvers/EvolutionaryGene.js";
 import { Vec2 } from "../core/geometry/Vector2.js";
@@ -25,6 +26,7 @@ const EvolutionaryFloorplanVisualization: React.FC<
   const solverRef = useRef<EvolutionaryFloorplanSolver | null>(null);
   const scaledBoundaryRef = useRef<Vec2[]>([]);
   const initialCameraTargetRef = useRef<[number, number, number]>([0, 0, 0]);
+  const [editableBoundary, setEditableBoundary] = useState<Vec2[]>([]);
 
   // State for tracking population snapshots (for grid view)
   const [populationSnapshot, setPopulationSnapshot] = useState<
@@ -48,6 +50,7 @@ const EvolutionaryFloorplanVisualization: React.FC<
       : scaleBoundary(templateBoundary, args.boundaryScale);
 
     scaledBoundaryRef.current = boundary;
+    setEditableBoundary(boundary);
 
     // Set initial camera target
     const centroid = calculateCentroid(boundary);
@@ -58,7 +61,7 @@ const EvolutionaryFloorplanVisualization: React.FC<
   useEffect(() => {
     const template = evolutionaryTemplates[args.template];
     const { rooms, adjacencies } = template;
-    const currentBoundary = scaledBoundaryRef.current;
+    const currentBoundary = args.editBoundary ? editableBoundary : scaledBoundaryRef.current;
 
     // Convert RoomState to RoomStateES (add targetArea and pressure fields)
     const roomsES = rooms.map((room) => ({
@@ -110,6 +113,8 @@ const EvolutionaryFloorplanVisualization: React.FC<
     args.globalTargetRatio,
     args.useNonLinearOverlapPenalty,
     args.overlapPenaltyExponent,
+    args.editBoundary,
+    editableBoundary,
   ]);
 
   // Animation loop (autoplay)
@@ -137,8 +142,15 @@ const EvolutionaryFloorplanVisualization: React.FC<
     return () => clearInterval(interval);
   }, [solverVersion]);
 
+  // Handle boundary changes from editor
+  const handleBoundaryChange = (newBoundary: Vec2[]) => {
+    setEditableBoundary(newBoundary);
+    scaledBoundaryRef.current = newBoundary;
+  };
+
   const stats = solverRef.current?.getStats();
   const template = evolutionaryTemplates[args.template];
+  const currentBoundary = args.editBoundary ? editableBoundary : scaledBoundaryRef.current;
 
   return (
     <div style={{ display: "flex", width: "100%", height: "100vh" }}>
@@ -155,9 +167,16 @@ const EvolutionaryFloorplanVisualization: React.FC<
               <SpringSystem3D
                 solverRef={solverRef as any}
                 adjacencies={template.adjacencies}
-                boundary={scaledBoundaryRef.current}
+                boundary={currentBoundary}
                 showAdjacencies={args.showAdjacencies}
-                showBoundary={args.showBoundary}
+                showBoundary={!args.editBoundary && args.showBoundary}
+              />
+            )}
+            {args.editBoundary && (
+              <BoundaryEditor
+                points={editableBoundary}
+                onChange={handleBoundaryChange}
+                editable={true}
               />
             )}
           </SceneContainer>
@@ -242,7 +261,7 @@ const EvolutionaryFloorplanVisualization: React.FC<
           <div style={{ height: "100%", overflow: "auto" }}>
             <PopulationGrid3D
               population={populationSnapshot}
-              boundary={scaledBoundaryRef.current}
+              boundary={currentBoundary}
             />
           </div>
         </div>
@@ -338,6 +357,10 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     },
 
     // Boundary
+    editBoundary: {
+      control: { type: "boolean" },
+      description: "Enable interactive boundary editing (drag vertices, click midpoints to add)",
+    },
     autoScaleBoundary: {
       control: { type: "boolean" },
       description: "Auto-scale boundary area to match sum of room areas",
