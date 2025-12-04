@@ -61,7 +61,7 @@ const EvolutionaryFloorplanVisualization: React.FC<
     // Set initial camera target
     const centroid = calculateCentroid(boundary);
     initialCameraTargetRef.current = [centroid.x, centroid.y, 0];
-  }, [args.template, args.boundaryScale, args.autoScaleBoundary]);
+  }, [args.template, args.boundaryScale]);
 
   // Recreate solver when parameters change
   useEffect(() => {
@@ -114,12 +114,8 @@ const EvolutionaryFloorplanVisualization: React.FC<
     args.teleportProbability,
     args.swapProbability,
     args.rotationProbability,
-    args.maxAspectRatio,
-    args.autoScaleBoundary,
     args.boundaryScale,
     args.globalTargetRatio,
-    args.useNonLinearOverlapPenalty,
-    args.overlapPenaltyExponent,
     args.editBoundary,
     editableBoundary,
   ]);
@@ -354,12 +350,6 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
         "Weight for rotation mutation (rotate entire floorplan 25°-335°)",
     },
 
-    // Physics
-    maxAspectRatio: {
-      control: { type: "range", min: 1.0, max: 5.0, step: 0.1 },
-      description: "Maximum room aspect ratio (width/height)",
-    },
-
     // Fitness weights
     sharedWallTarget: {
       control: { type: "range", min: 0.0, max: 10.0, step: 0.1 },
@@ -387,24 +377,12 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
       control: { type: "range", min: 0.1, max: 5.0, step: 0.1 },
       description: "Generations per second",
     },
-    showAdjacencies: {
-      control: { type: "boolean" },
-      description: "Show adjacency connections between rooms",
-    },
-    showBoundary: {
-      control: { type: "boolean" },
-      description: "Show boundary polygon",
-    },
 
     // Boundary
     editBoundary: {
       control: { type: "boolean" },
       description:
         "Enable interactive boundary editing (drag vertices, click midpoints to add)",
-    },
-    autoScaleBoundary: {
-      control: { type: "boolean" },
-      description: "Auto-scale boundary area to match sum of room areas",
     },
     boundaryScale: {
       control: { type: "range", min: 0.5, max: 2.0, step: 0.05 },
@@ -413,17 +391,6 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     globalTargetRatio: {
       control: { type: "range", min: 1.0, max: 5.0, step: 0.1 },
       description: "Global aspect ratio constraint for all rooms",
-    },
-
-    // Advanced
-    useNonLinearOverlapPenalty: {
-      control: { type: "boolean" },
-      description: "Apply non-linear penalty to overlaps",
-    },
-    overlapPenaltyExponent: {
-      control: { type: "range", min: 1.0, max: 3.0, step: 0.1 },
-      description:
-        "Exponent for overlap penalty (1.0 = linear, 2.0 = quadratic)",
     },
   },
   parameters: {

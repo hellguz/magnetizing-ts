@@ -85,13 +85,12 @@ export class EvolutionaryFloorplanSolver {
     // 2. Selection - Sort by fitness (lower is better)
     this.population.sort((a, b) => a.fitness - b.fitness);
 
-    // Keep best ~50% of the TARGET population size (e.g., 13 of 25)
-    // We base this on config.populationSize (25) not the current expanded size (50)
-    const numToKeep = Math.ceil(this.config.populationSize * 0.5); // 13
+    // Keep best ~20% of the TARGET population size (e.g., 20 of 25)
+    const numToKeep = Math.ceil(this.config.populationSize * 0.8); // 20
     const survivors = this.population.slice(0, numToKeep);
     
     // 3. Duplication - Refill to target population size (25)
-    // We create a "base" population of 25 from the 13 survivors
+    // We create a "base" population of 25 from the 20 survivors
     const nextGenBase: EvolutionaryGene[] = [];
     
     // First, add the elite survivors
