@@ -449,35 +449,3 @@ type Story = StoryObj<EvolutionaryVisualizationArgs>;
 export const Default: Story = {
   args: evolutionaryDefaults,
 };
-// Story with Grid View Hidden
-export const MainViewOnly: Story = {
-  args: {
-    ...evolutionaryDefaults,
-    showPopulationGrid: false,
-  },
-};
-// Story with Faster Animation
-export const FastEvolution: Story = {
-  args: {
-    ...evolutionaryDefaults,
-    animationSpeed: 5.0,
-  },
-};
-// Story with Emphasis on Shared Walls
-export const SharedWallFocus: Story = {
-  args: {
-    ...evolutionaryDefaults,
-    sharedWallWeight: 2000,
-    geometricWeight: 5,
-    areaDeviationWeight: 10,
-  },
-};
-// Story with More Geometric Constraints
-export const GeometricFocus: Story = {
-  args: {
-    ...evolutionaryDefaults,
-    sharedWallWeight: 500,
-    geometricWeight: 50,
-    areaDeviationWeight: 30,
-  },
-};

@@ -63,7 +63,7 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
   // Visualization
   showPopulationGrid: true,
   autoPlay: true,
-  animationSpeed: 1.0,             // 1 generation per second
+  animationSpeed: 10,             
   showAdjacencies: true,
   showBoundary: true,
 
