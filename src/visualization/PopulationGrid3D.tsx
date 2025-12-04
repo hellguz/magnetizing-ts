@@ -64,12 +64,12 @@ export const PopulationGrid3D: React.FC<PopulationGrid3DProps> = ({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "8px",
-        height: "100%",
-        overflow: "auto",
-        padding: "10px",
+        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+        gridAutoRows: "auto",
+        gap: "12px",
+        padding: "16px",
         background: "#f5f5f5",
+        boxSizing: "border-box",
       }}
     >
       {population.map((gene, index) => (
@@ -77,12 +77,14 @@ export const PopulationGrid3D: React.FC<PopulationGrid3DProps> = ({
           key={index}
           style={{
             position: "relative",
+            width: "100%",
             aspectRatio: "1",
-            border: index === 0 ? "1px solid #4CAF50" : "1px solid #ccc",
-            borderRadius: "1px",
+            border: index === 0 ? "2px solid #4CAF50" : "1px solid #ccc",
+            borderRadius: "4px",
             background: "#fff",
             cursor: "pointer",
             overflow: "hidden",
+            boxSizing: "border-box",
           }}
           onClick={() => onSelectVariant?.(index)}
           title={`Variant #${index + 1}\nFitness: ${gene.fitness.toFixed(
@@ -123,30 +125,32 @@ export const PopulationGrid3D: React.FC<PopulationGrid3DProps> = ({
             } ${range * 1.2} ${range * 1.2}`}
             style={{ display: "block" }}
           >
-            {/* Boundary */}
-            <polygon
-              points={boundary.map((p) => `${p.x},${p.y}`).join(" ")}
-              fill="none"
-              stroke="#ff0000"
-              strokeWidth={range * 0.01}
-              strokeDasharray={`${range * 0.02},${range * 0.01}`}
-            />
+            <g transform={`scale(1, -1) translate(0, ${-(bounds.minY + bounds.maxY)})`}>
+              {/* Boundary */}
+              <polygon
+                points={boundary.map((p) => `${p.x},${p.y}`).join(" ")}
+                fill="none"
+                stroke="#ff0000"
+                strokeWidth={range * 0.01}
+                strokeDasharray={`${range * 0.02},${range * 0.01}`}
+              />
 
-            {/* Rooms */}
-            {gene.rooms.map((room, roomIndex) => (
-              <g key={roomIndex}>
-                <rect
-                  x={room.x}
-                  y={room.y}
-                  width={room.width}
-                  height={room.height}
-                  fill={getRoomColor(roomIndex)}
-                  stroke="#333"
-                  strokeWidth={range * 0.005}
-                  opacity={0.8}
-                />
-              </g>
-            ))}
+              {/* Rooms */}
+              {gene.rooms.map((room, roomIndex) => (
+                <g key={roomIndex}>
+                  <rect
+                    x={room.x}
+                    y={room.y}
+                    width={room.width}
+                    height={room.height}
+                    fill={getRoomColor(roomIndex)}
+                    stroke="#333"
+                    strokeWidth={range * 0.005}
+                    opacity={0.8}
+                  />
+                </g>
+              ))}
+            </g>
           </svg>
         </div>
       ))}
