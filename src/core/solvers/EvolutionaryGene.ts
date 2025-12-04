@@ -158,8 +158,11 @@ export class EvolutionaryGene extends Gene {
     this.fitnessSharedWall = totalPenalty;
   }
 
+  // Find the calculateEvolutionaryFitness method (around line 551) and replace it:
+
   /**
    * Calculate combined fitness for evolutionary algorithm.
+   * NORMALIZED: Now divides raw scores by element counts to make weights scale-independent.
    */
   calculateEvolutionaryFitness(
     boundary: Vec2[],
@@ -167,17 +170,26 @@ export class EvolutionaryGene extends Gene {
     config: EvolutionaryConfig
   ): void {
     // 1. Geometric Fitness (Overlaps + Out of Bounds)
-    this.fitnessG = this.calculateGeometricFitnessEvolutionary(boundary, config);
+    const rawFitnessG = this.calculateGeometricFitnessEvolutionary(boundary, config);
     
+    // NORMALIZE GEOMETRY: Divide by number of rooms to keep weight consistent across sizes
+    // (We use Math.max(1, length) to avoid division by zero)
+    this.fitnessG = rawFitnessG / Math.max(1, this.rooms.length);
+
     // 2. Adjacency Fitness (Shared Walls & Distances)
     this.calculateSharedWallFitness(adjacencies, config);
+    
+    // NORMALIZE ADJACENCY: Divide by number of defined adjacency rules
+    // Use a temp variable since this.fitnessSharedWall is used elsewhere for visualization
+    const normalizedSharedWall = this.fitnessSharedWall / Math.max(1, adjacencies.length);
 
     // Final weighted sum (Lower is better)
+    // Now 'config.sharedWallWeight' represents "Penalty per average connection"
+    // and 'config.geometricWeight' represents "Penalty per average room overlap"
     this.fitness =
-      (this.fitnessSharedWall * config.sharedWallWeight) +
+      (normalizedSharedWall * config.sharedWallWeight) +
       (this.fitnessG * config.geometricWeight);
   }
-
   /**
    * Calculate geometric fitness (overlaps + out-of-bounds).
    * Fixed: Now correctly calculates out-of-bounds area.
