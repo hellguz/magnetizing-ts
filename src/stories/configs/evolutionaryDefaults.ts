@@ -46,8 +46,8 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
   template: "howoge-3-room",
 
   // Mutation operators (probabilities should sum to ~1.0 for balanced mutations)
-  teleportProbability: 0.3,
-  swapProbability: 0.4,
+  teleportProbability: 0.6,
+  swapProbability: 0.6,
   rotationProbability: 0.3,
 
   // Physics
@@ -56,7 +56,7 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
   // Fitness weights
   sharedWallTarget: 1.5,           // 1.5 meters minimum shared wall
   sharedWallWeight: 1500,          // High priority (dominates fitness)
-  geometricWeight: 10,             // Moderate penalty for overlaps/out-of-bounds
+  geometricWeight: 30,             // Moderate penalty for overlaps/out-of-bounds
 
   // Visualization
   showPopulationGrid: true,
@@ -69,7 +69,7 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
   autoScaleBoundary: true,         // Auto-scale boundary to match room areas
   boundaryScale: 1.0,              // Additional manual scaling
   globalTargetRatio: 2.0,          // Global aspect ratio constraint
-  editBoundary: false,             // Enable boundary editing
+  editBoundary: true,             // Enable boundary editing
 
   // Advanced
   useNonLinearOverlapPenalty: true,
