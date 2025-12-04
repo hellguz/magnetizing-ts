@@ -11,6 +11,7 @@ export interface EvolutionaryVisualizationArgs {
   teleportProbability: number;
   swapProbability: number;
   rotationProbability: number;
+  reshapeProbability: number;
 
   // Physics
   maxAspectRatio: number;
@@ -46,9 +47,10 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
   template: "howoge-3-room",
 
   // Mutation operators (probabilities should sum to ~1.0 for balanced mutations)
-  teleportProbability: 0.6,
+  teleportProbability: 0.4,
   swapProbability: 0.6,
   rotationProbability: 0.3,
+  reshapeProbability: 0.8,
 
   // Physics
   maxAspectRatio: 2.0,
@@ -56,7 +58,7 @@ export const evolutionaryDefaults: EvolutionaryVisualizationArgs = {
   // Fitness weights
   sharedWallTarget: 1.5,           // 1.5 meters minimum shared wall
   sharedWallWeight: 1500,          // High priority (dominates fitness)
-  geometricWeight: 20,             // Moderate penalty for overlaps/out-of-bounds
+  geometricWeight: 15,             // Moderate penalty for overlaps/out-of-bounds
 
   // Visualization
   showPopulationGrid: true,

@@ -100,6 +100,7 @@ const EvolutionaryFloorplanVisualization: React.FC<
         teleportProbability: args.teleportProbability,
         swapProbability: args.swapProbability,
         rotationProbability: args.rotationProbability,
+        reshapeProbability: args.reshapeProbability,
         maxAspectRatio: args.maxAspectRatio,
         useNonLinearOverlapPenalty: args.useNonLinearOverlapPenalty,
         overlapPenaltyExponent: args.overlapPenaltyExponent,
@@ -118,6 +119,7 @@ const EvolutionaryFloorplanVisualization: React.FC<
     args.teleportProbability,
     args.swapProbability,
     args.rotationProbability,
+    args.reshapeProbability,
     args.boundaryScale,
     args.globalTargetRatio,
     args.editBoundary,
@@ -357,6 +359,11 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
       control: { type: "range", min: 0.0, max: 1.0, step: 0.1 },
       description:
         "Weight for rotation mutation (rotate entire floorplan 25°-335°)",
+    },
+    reshapeProbability: {
+      control: { type: "range", min: 0.0, max: 1.0, step: 0.1 },
+      description:
+        "Weight for reshape mutation (random aspect ratio change of a room)",
     },
 
     // Fitness weights

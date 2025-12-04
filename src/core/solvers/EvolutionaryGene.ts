@@ -20,6 +20,7 @@ export interface EvolutionaryConfig {
   teleportProbability: number; // Weight for teleport mutation
   swapProbability: number; // Weight for swap mutation
   rotationProbability: number; // Weight for rotation mutation
+  reshapeProbability: number; // Weight for reshape mutation (aspect ratio change)
 
   // Physics
   maxAspectRatio: number; // Maximum room aspect ratio (width/height)
@@ -142,7 +143,7 @@ export class EvolutionaryGene extends Gene {
         // reaching the 1.5m target, but this state is vastly superior to not touching.
         // Factor 0.1 ensures this is much smaller than the "gap" penalty below.
         const deficit = config.sharedWallTarget - sharedWall;
-        totalPenalty += Math.pow(deficit * 0.1 * weight, exponent);
+        totalPenalty += Math.pow(deficit * 0.1 , exponent) * weight;
       } else {
         // Bad: Rooms are not touching.
         // Penalty increases with distance ("the longer the distance... the worse").
@@ -151,7 +152,7 @@ export class EvolutionaryGene extends Gene {
         // Base penalty (10.0) ensures that even being very close but not touching 
         // is worse than touching with a tiny shared wall.
         // Plus linear distance penalty.
-        totalPenalty += Math.pow((10.0 + gap) * weight,  exponent);
+        totalPenalty += Math.pow((10.0 + gap),  exponent) * weight;
       }
     }
 

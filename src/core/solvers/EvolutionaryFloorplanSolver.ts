@@ -101,9 +101,9 @@ export class EvolutionaryFloorplanSolver {
         const numMutations = Math.floor(Math.random() * 3) + 1;
         for (let i = 0; i < numMutations; i++) {
              const rand = Math.random();
-             const totalProb = this.config.teleportProbability + this.config.swapProbability + this.config.rotationProbability;
-             
-             // BUG FIX: If all probabilities are 0, do not mutate. 
+             const totalProb = this.config.teleportProbability + this.config.swapProbability + this.config.rotationProbability + this.config.reshapeProbability;
+
+             // BUG FIX: If all probabilities are 0, do not mutate.
              // Previously this fell through to 'else' and rotated.
              if (totalProb <= 0.0001) continue;
 
@@ -113,8 +113,10 @@ export class EvolutionaryFloorplanSolver {
                  this.applyTeleport(mutant);
              } else if (normalizedRand < this.config.teleportProbability + this.config.swapProbability) {
                  this.applySwap(mutant);
-             } else {
+             } else if (normalizedRand < this.config.teleportProbability + this.config.swapProbability + this.config.rotationProbability) {
                  this.applyRotation(mutant);
+             } else {
+                 this.applyReshape(mutant);
              }
         }
         mutants.push(mutant);
@@ -216,6 +218,35 @@ export class EvolutionaryFloorplanSolver {
       room.x = newCenterX - room.width / 2;
       room.y = newCenterY - room.height / 2;
     }
+  }
+
+  private applyReshape(gene: EvolutionaryGene): void {
+    const rooms = gene.rooms;
+    if (rooms.length === 0) return;
+    const room = rooms[Math.floor(Math.random() * rooms.length)];
+
+    // Randomize aspect ratio within allowed range
+    const maxRatio = this.globalTargetRatio ?? room.targetRatio;
+    const minRatio = 1.0 / maxRatio;
+    // Random aspect ratio (width/height) in range [minRatio, maxRatio]
+    const newAspectRatio = minRatio + Math.random() * (maxRatio - minRatio);
+
+    // Store room center position
+    const centerX = room.x + room.width / 2;
+    const centerY = room.y + room.height / 2;
+
+    // Recalculate width and height maintaining target area
+    // area = width * height, aspectRatio = width / height
+    // => width = sqrt(area * aspectRatio), height = sqrt(area / aspectRatio)
+    const newWidth = Math.sqrt(room.targetArea * newAspectRatio);
+    const newHeight = Math.sqrt(room.targetArea / newAspectRatio);
+
+    room.width = newWidth;
+    room.height = newHeight;
+
+    // Reposition to keep center in same place
+    room.x = centerX - newWidth / 2;
+    room.y = centerY - newHeight / 2;
   }
 
   private calculateCentroid(points: Vec2[]): Vec2 {
