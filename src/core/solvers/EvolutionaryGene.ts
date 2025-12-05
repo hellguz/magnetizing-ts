@@ -57,8 +57,8 @@ export class EvolutionaryGene extends Gene {
   /**
    * Measure the length of shared wall between two axis-aligned rectangular rooms.
    */
-  private measureSharedWall(roomA: RoomStateES, roomB: RoomStateES): number {
-    const TOLERANCE = 1;
+private measureSharedWall(roomA: RoomStateES, roomB: RoomStateES): number {
+    const TOLERANCE = 10; // 33cm snapping distance (Keep this small!)
 
     const aLeft = roomA.x;
     const aRight = roomA.x + roomA.width;
