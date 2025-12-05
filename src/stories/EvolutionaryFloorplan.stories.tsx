@@ -363,6 +363,15 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
       table: { category: "🏠 Template" },
     },
 
+    // === HIDDEN CONTROLS (use defaults) ===
+    showPopulationGrid: { table: { disable: true } },
+    showAdjacencies: { table: { disable: true } },
+    showBoundary: { table: { disable: true } },
+    editBoundary: { table: { disable: true } },
+    maxAspectRatio: { table: { disable: true } },
+    useNonLinearOverlapPenalty: { table: { disable: true } },
+    overlapPenaltyExponent: { table: { disable: true } },
+
     // === VISUALIZATION CONTROLS ===
     autoPlay: {
       control: { type: "boolean" },
@@ -372,21 +381,6 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     animationSpeed: {
       control: { type: "range", min: 0.1, max: 10.0, step: 0.1 },
       description: "Animation speed (higher = faster)",
-      table: { category: "🎬 Visualization" },
-    },
-    showPopulationGrid: {
-      control: { type: "boolean" },
-      description: "Show 5×5 grid of all 25 variants",
-      table: { category: "🎬 Visualization" },
-    },
-    showAdjacencies: {
-      control: { type: "boolean" },
-      description: "Show adjacency relationships between rooms",
-      table: { category: "🎬 Visualization" },
-    },
-    showBoundary: {
-      control: { type: "boolean" },
-      description: "Show boundary outline",
       table: { category: "🎬 Visualization" },
     },
 
@@ -449,12 +443,6 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     },
 
     // === BOUNDARY CONTROLS ===
-    editBoundary: {
-      control: { type: "boolean" },
-      description:
-        "Enable interactive boundary editing (drag vertices, click midpoints to add)",
-      table: { category: "📐 Boundary" },
-    },
     autoScaleBoundary: {
       control: { type: "boolean" },
       description: "Auto-scale boundary to match total room area",
@@ -467,27 +455,10 @@ const meta: Meta<EvolutionaryVisualizationArgs> = {
     },
 
     // === PHYSICS CONSTRAINTS ===
-    maxAspectRatio: {
-      control: { type: "range", min: 1.0, max: 5.0, step: 0.1 },
-      description: "Maximum aspect ratio allowed for individual rooms",
-      table: { category: "🔧 Physics" },
-    },
     globalTargetRatio: {
       control: { type: "range", min: 1.0, max: 5.0, step: 0.1 },
       description: "Global aspect ratio constraint for all rooms",
       table: { category: "🔧 Physics" },
-    },
-
-    // === ADVANCED ===
-    useNonLinearOverlapPenalty: {
-      control: { type: "boolean" },
-      description: "Use non-linear penalty for overlaps (exponential penalty)",
-      table: { category: "⚙️ Advanced" },
-    },
-    overlapPenaltyExponent: {
-      control: { type: "range", min: 1.0, max: 3.0, step: 0.1 },
-      description: "Exponent for non-linear overlap penalty",
-      table: { category: "⚙️ Advanced" },
     },
   },
   parameters: {
